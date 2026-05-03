@@ -16,9 +16,9 @@ env:
 
 jobs:
   # ── Linux ──────────────────────────────────────────────────────────────────
-  # Builds linux/amd64 (native CGO) and linux/arm64 (cross via aarch64-gcc).
   build-linux:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
         with:
@@ -37,12 +37,12 @@ jobs:
         env:
           ORT_VERSION: ${{ env.ORT_VERSION }}
 
-      - name: GoReleaser build (split)
+      - name: GoReleaser build
         uses: goreleaser/goreleaser-action@v6
         with:
           distribution: goreleaser
-          version: latest
-          args: build --split --clean
+          version: v2.15.4
+          args: build --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -52,10 +52,9 @@ jobs:
           path: dist/
 
   # ── macOS ──────────────────────────────────────────────────────────────────
-  # Builds darwin/arm64 (native, macos-latest is M-series) and darwin/amd64
-  # (cross via clang -arch x86_64 wrapper installed at a fixed path).
   build-darwin:
     runs-on: macos-latest
+
     steps:
       - uses: actions/checkout@v4
         with:
@@ -70,8 +69,10 @@ jobs:
         run: |
           printf '#!/bin/sh\nexec clang -arch x86_64 "$@"\n' \
             | sudo tee /usr/local/bin/cc-x86_64 > /dev/null
+
           printf '#!/bin/sh\nexec clang++ -arch x86_64 "$@"\n' \
             | sudo tee /usr/local/bin/cxx-x86_64 > /dev/null
+
           sudo chmod +x /usr/local/bin/cc-x86_64 /usr/local/bin/cxx-x86_64
 
       - name: Download ORT (macOS)
@@ -79,12 +80,12 @@ jobs:
         env:
           ORT_VERSION: ${{ env.ORT_VERSION }}
 
-      - name: GoReleaser build (split)
+      - name: GoReleaser build
         uses: goreleaser/goreleaser-action@v6
         with:
           distribution: goreleaser
-          version: latest
-          args: build --split --clean
+          version: v2.15.4
+          args: build --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -94,9 +95,9 @@ jobs:
           path: dist/
 
   # ── Windows ────────────────────────────────────────────────────────────────
-  # Builds windows/amd64 with native CGO (MinGW-w64 on the runner).
   build-windows:
     runs-on: windows-latest
+
     steps:
       - uses: actions/checkout@v4
         with:
@@ -113,12 +114,12 @@ jobs:
         env:
           ORT_VERSION: ${{ env.ORT_VERSION }}
 
-      - name: GoReleaser build (split)
+      - name: GoReleaser build
         uses: goreleaser/goreleaser-action@v6
         with:
           distribution: goreleaser
-          version: latest
-          args: build --split --clean
+          version: v2.15.4
+          args: build --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -128,11 +129,14 @@ jobs:
           path: dist/
 
   # ── Release ────────────────────────────────────────────────────────────────
-  # Merges all platform artifacts, creates the GitHub Release, and pushes
-  # the Docker image to ghcr.io.
   release:
-    needs: [build-linux, build-darwin, build-windows]
+    needs:
+      - build-linux
+      - build-darwin
+      - build-windows
+
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
         with:
@@ -157,11 +161,11 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: GoReleaser release (merge)
+      - name: GoReleaser release
         uses: goreleaser/goreleaser-action@v6
         with:
           distribution: goreleaser
-          version: latest
-          args: release --merge --clean
+          version: v2.15.4
+          args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
