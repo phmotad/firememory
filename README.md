@@ -231,8 +231,3 @@ See [CONTRIBUTING.md](CONTRIBUTING.md). All tests must pass (`go test ./...`) be
 
 The ONNX backend is behind `//go:build onnx` — tests run offline without models by design.
 
----
-
-## License
-
-MIT — see [LICENSE](LICENSE).

@@ -123,6 +123,7 @@ def export_encoder(hf_id: str, out_dir: Path, quantize: bool) -> None:
             str(fp32_onnx),
             str(final_onnx),
             weight_type=QuantType.QInt8,
+            optimize_model=True,
         )
     else:
         shutil.copy(fp32_onnx, final_onnx)
@@ -173,6 +174,7 @@ def export_gliner(hf_id: str, out_dir: Path, quantize: bool) -> None:
             str(fp32_onnx),
             str(final_onnx),
             weight_type=QuantType.QInt8,
+            optimize_model=True,
         )
         fp32_onnx.unlink(missing_ok=True)
     else:
