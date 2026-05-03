@@ -54,13 +54,27 @@ builds:
           - CGO_LDFLAGS=-L./tokenizers-lib/linux-aarch64
 
 archives:
-  - id: default
+  # fmem: pure Go, all platforms. No bundled libs needed.
+  - id: fmem-archive
+    builds:
+      - fmem
     formats:
       - tar.gz
     format_overrides:
       - goos: windows
         formats:
           - zip
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Binary }}_{{ .Os }}_{{ .Arch }}"
+    files:
+      - LICENSE
+      - README.md
+
+  # fquery: Linux only. Bundle the ORT shared library alongside the binary.
+  - id: fquery-archive
+    builds:
+      - fquery
+    formats:
+      - tar.gz
     name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Binary }}_{{ .Os }}_{{ .Arch }}"
     files:
       - LICENSE
