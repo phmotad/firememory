@@ -9,7 +9,7 @@
 
 FireMemory stores everything in a single `.fbrain` file — no server, no cloud, no configuration.
 Agents read and write memory through [MCP](https://modelcontextprotocol.io/) via `fquery mcp`.
-ML models (~280 MB) are downloaded automatically on first use.
+ML models (~325 MB) are downloaded automatically on first use.
 
 ---
 
@@ -62,7 +62,7 @@ Or skip this — `fmem stats` and any `fquery` tool call will auto-create
 ### 4. Restart your editor
 
 The MCP server starts on demand. On the first call, `fquery mcp` downloads the
-three ML models (~280 MB, runs once). Subsequent starts are instant.
+three ML models (~325 MB, runs once). Subsequent starts are instant.
 
 ---
 
@@ -79,7 +79,7 @@ semantically, builds a knowledge graph, and assembles context windows tailored t
 | Embeddings | multilingual-e5-small INT8 (local ONNX) |
 | Entity extraction | GLiNER-small-v2.1 INT8 (local ONNX) |
 | Intent / classification | DeBERTa-v3-small INT8 (local ONNX) |
-| Model size | ~280 MB total, downloaded once |
+| Model size | ~325 MB total, downloaded once |
 | Transport | MCP over stdio (`fquery mcp`) |
 | Privacy | 100% local — nothing leaves your machine |
 
@@ -158,7 +158,7 @@ FireQuery uses three local ONNX INT8 models, downloaded automatically:
 |---|---|---|
 | `multilingual-e5-small` | Embeddings, semantic recall | ~120 MB |
 | `deberta-v3-small` | Intent & trigger classification | ~72 MB |
-| `gliner-small-v2.1` | Named entity extraction | ~90 MB |
+| `gliner-small-v2.1` | Named entity extraction | ~121 MB |
 
 Models are stored in:
 - **macOS** — `~/Library/Caches/firememory/models`

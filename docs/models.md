@@ -9,9 +9,9 @@ on the first call to `fquery mcp` and never leave your machine.
 |---|---|---|---|
 | `multilingual-e5-small` | `multilingual-e5-small-onnx-int8.tar.gz` | Embedding (similarity, recall) | ~120 MB |
 | `deberta-v3-small` | `deberta-v3-small-onnx-int8.tar.gz` | Intent & trigger classification | ~72 MB |
-| `gliner-small-v2.1` | `gliner-small-v2.1-onnx-int8.tar.gz` | Named entity extraction (NER) | ~90 MB |
+| `gliner-small-v2.1` | `gliner-small-v2.1-onnx-int8.tar.gz` | Named entity extraction (NER) | ~121 MB |
 
-Total compressed: ~282 MB. Extracted on disk: slightly more.
+Total compressed: ~325 MB. Extracted on disk: slightly more.
 
 ## Cache location
 
