@@ -110,7 +110,7 @@ def export_encoder(hf_id: str, out_dir: Path, quantize: bool) -> None:
     fp32_dir.mkdir(parents=True, exist_ok=True)
 
     model     = ORTModelForFeatureExtraction.from_pretrained(hf_id, export=True)
-    tokenizer = AutoTokenizer.from_pretrained(hf_id)
+    tokenizer = model.data_processor.transformer_tokenizer
     model.save_pretrained(str(fp32_dir))
     tokenizer.save_pretrained(str(fp32_dir))
 
