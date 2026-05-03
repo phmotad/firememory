@@ -187,13 +187,13 @@ jobs:
               -o bin/fmem.exe ./cmd/fmem
 
       - name: Pack archive
-        shell: bash
+        shell: pwsh
         run: |
-          VERSION=${GITHUB_REF_NAME#v}
-          NAME="firememory_${VERSION}_windows_amd64"
-          mkdir -p archives "staging/${NAME}"
-          cp bin/fmem.exe LICENSE README.md "staging/${NAME}/"
-          cd staging && zip -r "../archives/${NAME}.zip" "${NAME}"
+          $VERSION = $env:GITHUB_REF_NAME -replace '^v', ''
+          $NAME = "firememory_${VERSION}_windows_amd64"
+          New-Item -ItemType Directory -Force -Path "archives", "staging\$NAME" | Out-Null
+          Copy-Item bin\fmem.exe, LICENSE, README.md "staging\$NAME\"
+          Compress-Archive -Path "staging\$NAME" -DestinationPath "archives\${NAME}.zip"
 
       - uses: actions/upload-artifact@v4
         with:
