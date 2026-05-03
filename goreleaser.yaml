@@ -27,8 +27,7 @@ builds:
       - -s -w
       - -X github.com/phmotad/firememory/internal/version.Version={{.Version}}
 
-  # fquery: CGO required (daulet/tokenizers Rust binding + yalue/onnxruntime_go).
-  # Cross-compiler overrides are set per platform in the release workflow.
+  # fquery: CGO + ONNX. Por enquanto, build Linux only.
   - id: fquery
     binary: fquery
     main: ./cmd/fquery
@@ -38,33 +37,19 @@ builds:
       - CGO_ENABLED=1
     goos:
       - linux
-      - darwin
-      - windows
     goarch:
       - amd64
       - arm64
-    ignore:
-      - goos: windows
-        goarch: arm64
     ldflags:
       - -s -w
       - -X github.com/phmotad/firememory/internal/version.Version={{.Version}}
     overrides:
-      # Linux arm64: cross-compiled from amd64 runner using aarch64 gcc.
       - goos: linux
         goarch: arm64
         env:
           - CGO_ENABLED=1
           - CC=aarch64-linux-gnu-gcc
           - CXX=aarch64-linux-gnu-g++
-      # macOS amd64: cross-compiled from arm64 runner via clang -arch x86_64.
-      # The workflow installs /usr/local/bin/cc-x86_64 before GoReleaser runs.
-      - goos: darwin
-        goarch: amd64
-        env:
-          - CGO_ENABLED=1
-          - CC=/usr/local/bin/cc-x86_64
-          - CXX=/usr/local/bin/cxx-x86_64
 
 archives:
   - id: default
@@ -74,11 +59,10 @@ archives:
       - goos: windows
         formats:
           - zip
-    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Binary }}_{{ .Os }}_{{ .Arch }}"
     files:
       - LICENSE
       - README.md
-      # ORT shared library for this platform (placed by download-ort script).
       - src: ort-lib/*
         dst: .
         strip_parent: true

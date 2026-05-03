@@ -1,6 +1,7 @@
 # Binaries
 bin/
 dist/
+models/
 
 # ORT working directory (created by scripts/download-ort.sh before GoReleaser runs)
 ort-lib/

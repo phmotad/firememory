@@ -8,133 +8,13 @@ on:
 permissions:
   contents: write
   packages: write
-  id-token: write
 
 env:
   GO_VERSION: "1.24"
   ORT_VERSION: "1.20.0"
 
 jobs:
-  # ── Linux ──────────────────────────────────────────────────────────────────
-  build-linux:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - uses: actions/setup-go@v5
-        with:
-          go-version: ${{ env.GO_VERSION }}
-          cache: true
-
-      - name: Install arm64 cross-compiler
-        run: sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
-
-      - name: Download ORT (Linux)
-        run: bash scripts/download-ort.sh
-        env:
-          ORT_VERSION: ${{ env.ORT_VERSION }}
-
-      - name: GoReleaser build
-        uses: goreleaser/goreleaser-action@v6
-        with:
-          distribution: goreleaser
-          version: v2.15.4
-          args: build --clean
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: dist-linux
-          path: dist/
-
-  # ── macOS ──────────────────────────────────────────────────────────────────
-  build-darwin:
-    runs-on: macos-latest
-
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - uses: actions/setup-go@v5
-        with:
-          go-version: ${{ env.GO_VERSION }}
-          cache: true
-
-      - name: Install x86_64 clang wrappers
-        run: |
-          printf '#!/bin/sh\nexec clang -arch x86_64 "$@"\n' \
-            | sudo tee /usr/local/bin/cc-x86_64 > /dev/null
-
-          printf '#!/bin/sh\nexec clang++ -arch x86_64 "$@"\n' \
-            | sudo tee /usr/local/bin/cxx-x86_64 > /dev/null
-
-          sudo chmod +x /usr/local/bin/cc-x86_64 /usr/local/bin/cxx-x86_64
-
-      - name: Download ORT (macOS)
-        run: bash scripts/download-ort.sh
-        env:
-          ORT_VERSION: ${{ env.ORT_VERSION }}
-
-      - name: GoReleaser build
-        uses: goreleaser/goreleaser-action@v6
-        with:
-          distribution: goreleaser
-          version: v2.15.4
-          args: build --clean
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: dist-darwin
-          path: dist/
-
-  # ── Windows ────────────────────────────────────────────────────────────────
-  build-windows:
-    runs-on: windows-latest
-
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - uses: actions/setup-go@v5
-        with:
-          go-version: ${{ env.GO_VERSION }}
-          cache: true
-
-      - name: Download ORT (Windows)
-        shell: pwsh
-        run: .\scripts\download-ort.ps1
-        env:
-          ORT_VERSION: ${{ env.ORT_VERSION }}
-
-      - name: GoReleaser build
-        uses: goreleaser/goreleaser-action@v6
-        with:
-          distribution: goreleaser
-          version: v2.15.4
-          args: build --clean
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: dist-windows
-          path: dist/
-
-  # ── Release ────────────────────────────────────────────────────────────────
   release:
-    needs:
-      - build-linux
-      - build-darwin
-      - build-windows
-
     runs-on: ubuntu-latest
 
     steps:
@@ -147,12 +27,15 @@ jobs:
           go-version: ${{ env.GO_VERSION }}
           cache: true
 
-      - name: Download all platform dists
-        uses: actions/download-artifact@v4
-        with:
-          pattern: dist-*
-          path: dist/
-          merge-multiple: true
+      - name: Install cross-compilers
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
+
+      - name: Download ORT
+        run: bash scripts/download-ort.sh
+        env:
+          ORT_VERSION: ${{ env.ORT_VERSION }}
 
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
@@ -161,7 +44,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: GoReleaser release
+      - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v6
         with:
           distribution: goreleaser
