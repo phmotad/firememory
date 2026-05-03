@@ -22,6 +22,10 @@ import (
 )
 
 func TestRealMCPFlowGeneratesMarkdownReport(t *testing.T) {
+	if os.Getenv("FIREQUERY_REAL_E2E") == "" {
+		t.Skip("set FIREQUERY_REAL_E2E=1 to run the real MCP binary E2E test")
+	}
+
 	reportPath := filepath.Clean(filepath.Join("..", "..", "..", "docs", "reports", "firequery-real-mcp-e2e-report.md"))
 	var report strings.Builder
 	failures := make([]string, 0)
