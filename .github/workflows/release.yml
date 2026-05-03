@@ -14,13 +14,11 @@ env:
   ORT_VERSION: "1.20.0"
 
 jobs:
-  # ── Linux: fmem (linux) + fquery (linux amd64 + arm64) ─────────────────────
+  # ── Linux: fmem (amd64+arm64) + fquery (amd64+arm64, CGO) ──────────────────
   build-linux:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - uses: actions/setup-go@v5
         with:
@@ -40,32 +38,66 @@ jobs:
       - name: Download libtokenizers (linux)
         run: bash scripts/download-tokenizers.sh
 
-      - name: Build
-        uses: goreleaser/goreleaser-action@v6
+      - name: Build binaries
+        run: |
+          VERSION=${GITHUB_REF_NAME#v}
+          LDFLAGS="-s -w -X github.com/phmotad/firememory/internal/version.Version=${VERSION}"
+
+          mkdir -p bin/linux_amd64 bin/linux_arm64
+
+          # fmem — no CGO, cross-compile freely
+          GOOS=linux GOARCH=amd64 CGO_ENABLED=0 \
+            go build -ldflags "${LDFLAGS}" -o bin/linux_amd64/fmem ./cmd/fmem
+          GOOS=linux GOARCH=arm64 CGO_ENABLED=0 \
+            go build -ldflags "${LDFLAGS}" -o bin/linux_arm64/fmem ./cmd/fmem
+
+          # fquery linux/amd64 — CGO, native
+          CGO_ENABLED=1 \
+            CGO_LDFLAGS="-L$(pwd)/tokenizers-lib/linux-amd64" \
+            GOOS=linux GOARCH=amd64 \
+            go build -tags onnx -ldflags "${LDFLAGS}" \
+              -o bin/linux_amd64/fquery ./cmd/fquery
+
+          # fquery linux/arm64 — CGO, cross
+          CGO_ENABLED=1 \
+            CC=aarch64-linux-gnu-gcc \
+            CXX=aarch64-linux-gnu-g++ \
+            CGO_LDFLAGS="-L$(pwd)/tokenizers-lib/linux-aarch64" \
+            GOOS=linux GOARCH=arm64 \
+            go build -tags onnx -ldflags "${LDFLAGS}" \
+              -o bin/linux_arm64/fquery ./cmd/fquery
+
+      - name: Pack archives
+        run: |
+          VERSION=${GITHUB_REF_NAME#v}
+          mkdir -p archives
+
+          for ARCH in amd64 arm64; do
+            NAME="firememory_${VERSION}_linux_${ARCH}"
+            mkdir -p "staging/${NAME}"
+            cp bin/linux_${ARCH}/fmem   "staging/${NAME}/"
+            cp bin/linux_${ARCH}/fquery "staging/${NAME}/"
+            cp ort-lib/linux/libonnxruntime.so "staging/${NAME}/"
+            cp LICENSE README.md "staging/${NAME}/"
+            tar -czf "archives/${NAME}.tar.gz" -C staging "${NAME}"
+          done
+
+      # Save fquery linux/amd64 binary for the Docker build later
+      - uses: actions/upload-artifact@v4
         with:
-          distribution: goreleaser
-          version: v2.15.4
-          args: build --split --clean
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          name: fquery-linux-amd64
+          path: bin/linux_amd64/fquery
 
       - uses: actions/upload-artifact@v4
         with:
-          name: dist-linux
-          path: dist/
+          name: archives-linux
+          path: archives/
 
-      - uses: actions/upload-artifact@v4
-        with:
-          name: ort-linux
-          path: ort-lib/linux/
-
-  # ── macOS: fmem (darwin) + fquery (darwin arm64 + amd64) ───────────────────
+  # ── macOS: fmem (arm64+amd64) + fquery (arm64+amd64, CGO) ─────────────────
   build-darwin:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - uses: actions/setup-go@v5
         with:
@@ -86,53 +118,89 @@ jobs:
       - name: Download libtokenizers (darwin)
         run: bash scripts/download-tokenizers.sh
 
-      - name: Build
-        uses: goreleaser/goreleaser-action@v6
-        with:
-          distribution: goreleaser
-          version: v2.15.4
-          args: build --split --clean
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build binaries
+        run: |
+          VERSION=${GITHUB_REF_NAME#v}
+          LDFLAGS="-s -w -X github.com/phmotad/firememory/internal/version.Version=${VERSION}"
+
+          mkdir -p bin/darwin_arm64 bin/darwin_amd64
+
+          # fmem — no CGO
+          GOOS=darwin GOARCH=arm64 CGO_ENABLED=0 \
+            go build -ldflags "${LDFLAGS}" -o bin/darwin_arm64/fmem ./cmd/fmem
+          GOOS=darwin GOARCH=amd64 CGO_ENABLED=0 \
+            go build -ldflags "${LDFLAGS}" -o bin/darwin_amd64/fmem ./cmd/fmem
+
+          # fquery darwin/arm64 — CGO, native M1
+          CGO_ENABLED=1 \
+            CGO_LDFLAGS="-L$(pwd)/tokenizers-lib/darwin-arm64" \
+            GOOS=darwin GOARCH=arm64 \
+            go build -tags onnx -ldflags "${LDFLAGS}" \
+              -o bin/darwin_arm64/fquery ./cmd/fquery
+
+          # fquery darwin/amd64 — CGO, clang -arch x86_64
+          CGO_ENABLED=1 \
+            CC=/usr/local/bin/cc-x86_64 \
+            CGO_LDFLAGS="-L$(pwd)/tokenizers-lib/darwin-amd64" \
+            GOOS=darwin GOARCH=amd64 \
+            go build -tags onnx -ldflags "${LDFLAGS}" \
+              -o bin/darwin_amd64/fquery ./cmd/fquery
+
+      - name: Pack archives
+        run: |
+          VERSION=${GITHUB_REF_NAME#v}
+          mkdir -p archives
+
+          for ARCH in arm64 amd64; do
+            NAME="firememory_${VERSION}_darwin_${ARCH}"
+            mkdir -p "staging/${NAME}"
+            cp bin/darwin_${ARCH}/fmem   "staging/${NAME}/"
+            cp bin/darwin_${ARCH}/fquery "staging/${NAME}/"
+            cp ort-lib/darwin/libonnxruntime.dylib "staging/${NAME}/"
+            cp LICENSE README.md "staging/${NAME}/"
+            tar -czf "archives/${NAME}.tar.gz" -C staging "${NAME}"
+          done
 
       - uses: actions/upload-artifact@v4
         with:
-          name: dist-darwin
-          path: dist/
+          name: archives-darwin
+          path: archives/
 
-      - uses: actions/upload-artifact@v4
-        with:
-          name: ort-darwin
-          path: ort-lib/darwin/
-
-  # ── Windows: fmem only ──────────────────────────────────────────────────────
+  # ── Windows: fmem only (fquery requires WSL2 or Docker on Windows) ─────────
   build-windows:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - uses: actions/setup-go@v5
         with:
           go-version: ${{ env.GO_VERSION }}
           cache: true
 
-      - name: Build
-        uses: goreleaser/goreleaser-action@v6
-        with:
-          distribution: goreleaser
-          version: v2.15.4
-          args: build --split --clean
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build fmem (windows/amd64)
+        shell: bash
+        run: |
+          VERSION=${GITHUB_REF_NAME#v}
+          GOOS=windows GOARCH=amd64 CGO_ENABLED=0 \
+            go build \
+              -ldflags "-s -w -X github.com/phmotad/firememory/internal/version.Version=${VERSION}" \
+              -o bin/fmem.exe ./cmd/fmem
+
+      - name: Pack archive
+        shell: bash
+        run: |
+          VERSION=${GITHUB_REF_NAME#v}
+          NAME="firememory_${VERSION}_windows_amd64"
+          mkdir -p archives "staging/${NAME}"
+          cp bin/fmem.exe LICENSE README.md "staging/${NAME}/"
+          cd staging && zip -r "../archives/${NAME}.zip" "${NAME}"
 
       - uses: actions/upload-artifact@v4
         with:
-          name: dist-windows
-          path: dist/
+          name: archives-windows
+          path: archives/
 
-  # ── Merge artifacts and publish release ────────────────────────────────────
+  # ── Publish release + Docker image ─────────────────────────────────────────
   release:
     needs: [build-linux, build-darwin, build-windows]
     runs-on: ubuntu-latest
@@ -141,35 +209,40 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-go@v5
+      - uses: actions/download-artifact@v4
         with:
-          go-version: ${{ env.GO_VERSION }}
-          cache: true
+          name: archives-linux
+          path: archives/
 
       - uses: actions/download-artifact@v4
         with:
-          name: dist-linux
-          path: dist/
+          name: archives-darwin
+          path: archives/
 
       - uses: actions/download-artifact@v4
         with:
-          name: dist-darwin
-          path: dist/
+          name: archives-windows
+          path: archives/
 
       - uses: actions/download-artifact@v4
         with:
-          name: dist-windows
-          path: dist/
+          name: fquery-linux-amd64
+          path: docker-build/
 
-      - uses: actions/download-artifact@v4
-        with:
-          name: ort-linux
-          path: ort-lib/linux/
+      - name: Generate SHA256SUMS
+        run: |
+          cd archives
+          sha256sum * > SHA256SUMS
+          cat SHA256SUMS
 
-      - uses: actions/download-artifact@v4
-        with:
-          name: ort-darwin
-          path: ort-lib/darwin/
+      - name: Create GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${{ github.ref_name }}" \
+            --title "FireMemory ${{ github.ref_name }}" \
+            --generate-notes \
+            archives/*
 
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
@@ -178,11 +251,20 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Release
-        uses: goreleaser/goreleaser-action@v6
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
         with:
-          distribution: goreleaser
-          version: v2.15.4
-          args: release --merge
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          context: docker-build/
+          file: Dockerfile.fquery
+          push: true
+          tags: |
+            ghcr.io/phmotad/firequery:${{ github.ref_name }}
+            ghcr.io/phmotad/firequery:latest
+          build-args: |
+            ORT_VERSION=${{ env.ORT_VERSION }}
+          labels: |
+            org.opencontainers.image.created=${{ github.event.repository.updated_at }}
+            org.opencontainers.image.title=firequery
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.version=${{ github.ref_name }}
+            org.opencontainers.image.source=https://github.com/phmotad/firememory
