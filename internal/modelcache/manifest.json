@@ -9,7 +9,7 @@
       "archive": "multilingual-e5-small-onnx-int8.tar.gz",
       "primary_url": "https://github.com/phmotad/firememory/releases/download/models-v1/multilingual-e5-small-onnx-int8.tar.gz",
       "fallback_url": "https://huggingface.co/phmotad/firememory-onnx/resolve/main/multilingual-e5-small-onnx-int8.tar.gz",
-      "sha256": "PLACEHOLDER",
+      "sha256": "97d9b8974a8be7b428b225ba2a3aa33be074071109d275dd454c9ff3b8479f4b",
       "compressed_bytes": 120000000,
       "label": "E5 multilingual-small (embeddings)"
     },
@@ -20,7 +20,7 @@
       "archive": "deberta-v3-small-onnx-int8.tar.gz",
       "primary_url": "https://github.com/phmotad/firememory/releases/download/models-v1/deberta-v3-small-onnx-int8.tar.gz",
       "fallback_url": "https://huggingface.co/phmotad/firememory-onnx/resolve/main/deberta-v3-small-onnx-int8.tar.gz",
-      "sha256": "PLACEHOLDER",
+      "sha256": "acde0e98dbcb14939bc165d7ba6cef81b802e9ba2866af84adef6242f9c3faff",
       "compressed_bytes": 72000000,
       "label": "DeBERTa-v3-small (intent + trigger classification)"
     },
@@ -31,7 +31,7 @@
       "archive": "gliner-small-v2.1-onnx-int8.tar.gz",
       "primary_url": "https://github.com/phmotad/firememory/releases/download/models-v1/gliner-small-v2.1-onnx-int8.tar.gz",
       "fallback_url": "https://huggingface.co/phmotad/firememory-onnx/resolve/main/gliner-small-v2.1-onnx-int8.tar.gz",
-      "sha256": "PLACEHOLDER",
+      "sha256": "6ca18fea46746b57eff67ec749311ed87e125ce24db4d1d615610aa3e27d461f",
       "compressed_bytes": 90000000,
       "label": "GLiNER-small-v2.1 (entity extraction)"
     }
