@@ -14,7 +14,7 @@ class Firememory < Formula
   desc "Local-first semantic memory engine for AI agents"
   homepage "https://github.com/phmotad/firememory"
   version "PLACEHOLDER_VERSION"
-  license "MIT"
+  license "Apache-2.0"
 
   on_macos do
     on_arm do
