@@ -27,7 +27,7 @@ builds:
       - -s -w
       - -X github.com/phmotad/firememory/internal/version.Version={{.Version}}
 
-  # fquery: CGO + ONNX. Por enquanto, build Linux only.
+  # fquery: CGO + ONNX. Linux only (amd64 + arm64 cross-compiled).
   - id: fquery
     binary: fquery
     main: ./cmd/fquery
@@ -35,6 +35,7 @@ builds:
       - onnx
     env:
       - CGO_ENABLED=1
+      - CGO_LDFLAGS=-L./tokenizers-lib/linux-amd64
     goos:
       - linux
     goarch:
@@ -50,6 +51,7 @@ builds:
           - CGO_ENABLED=1
           - CC=aarch64-linux-gnu-gcc
           - CXX=aarch64-linux-gnu-g++
+          - CGO_LDFLAGS=-L./tokenizers-lib/linux-aarch64
 
 archives:
   - id: default

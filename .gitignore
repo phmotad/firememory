@@ -6,6 +6,9 @@ models/
 # ORT working directory (created by scripts/download-ort.sh before GoReleaser runs)
 ort-lib/
 
+# Tokenizers static lib (created by scripts/download-tokenizers.sh before GoReleaser runs)
+tokenizers-lib/
+
 # Build artifacts
 *.exe
 *.dll
