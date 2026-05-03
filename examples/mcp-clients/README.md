@@ -1,174 +1,143 @@
-# MCP Client Registration Examples
+# MCP Client Registration / Registro de Clientes MCP
 
-This folder shows the supported agent integration pattern:
+> [English](#english) | [Português](#português)
 
-Agent -> FireQuery MCP -> FireMemory
+---
 
-Do not register FireMemory directly as the public MCP endpoint.
+## English
 
-## Required command
+This example shows how to register FireQuery as an MCP server in various editors.
 
-Build the binary:
+**Architecture:**
+```
+Your editor  →  fquery mcp (stdio)  →  .fbrain file
+```
+
+Always connect to **FireQuery**, not directly to FireMemory.
+
+### Quick registration (recommended)
 
 ```sh
-go build -o ./bin/fquery ./cmd/fquery
+fquery init-mcp cursor        # Cursor
+fquery init-mcp claude-code   # Claude Code
+fquery init-mcp windsurf      # Windsurf
+fquery init-mcp zed           # Zed
 ```
 
-Start the MCP server:
+Restart the editor after running the command.
+
+### Manual registration
+
+For editors that support the standard MCP JSON config:
+
+**macOS / Linux**
+```json
+{
+  "mcpServers": {
+    "firequery": {
+      "command": "fquery",
+      "args": ["mcp"]
+    }
+  }
+}
+```
+
+**Windows** (fquery requires WSL2 or Docker)
+```json
+{
+  "mcpServers": {
+    "firequery": {
+      "command": "wsl",
+      "args": ["fquery", "mcp"]
+    }
+  }
+}
+```
+
+### Per-project brainfile
+
+```json
+{
+  "mcpServers": {
+    "firequery": {
+      "command": "fquery",
+      "args": ["mcp"],
+      "env": {
+        "FIREMEMORY_DEFAULT_BRAIN": "/path/to/project.fbrain"
+      }
+    }
+  }
+}
+```
+
+See [docs/guides/](../../docs/guides/) for editor-specific guides.
+
+---
+
+## Português
+
+Este exemplo mostra como registrar o FireQuery como servidor MCP em vários editores.
+
+**Arquitetura:**
+```
+Seu editor  →  fquery mcp (stdio)  →  arquivo .fbrain
+```
+
+Sempre conecte ao **FireQuery**, não diretamente ao FireMemory.
+
+### Registro rápido (recomendado)
 
 ```sh
-./bin/fquery mcp
+fquery init-mcp cursor        # Cursor
+fquery init-mcp claude-code   # Claude Code
+fquery init-mcp windsurf      # Windsurf
+fquery init-mcp zed           # Zed
 ```
 
-On Windows:
+Reinicie o editor após executar o comando.
 
-```powershell
-.\bin\fquery.exe mcp
-```
+### Registro manual
 
-## Generic stdio registration
+Para editores que suportam o formato JSON padrão do MCP:
 
-Most MCP-capable clients need the same command definition:
-
+**macOS / Linux**
 ```json
 {
-  "name": "firequery",
-  "transport": {
-    "type": "stdio",
-    "command": "C:\\Projects\\FireMemory\\bin\\fquery.exe",
-    "args": ["mcp"],
-    "cwd": "C:\\Projects\\FireMemory"
+  "mcpServers": {
+    "firequery": {
+      "command": "fquery",
+      "args": ["mcp"]
+    }
   }
 }
 ```
 
-On Unix-like systems:
-
+**Windows** (fquery requer WSL2 ou Docker)
 ```json
 {
-  "name": "firequery",
-  "transport": {
-    "type": "stdio",
-    "command": "/path/to/FireMemory/bin/fquery",
-    "args": ["mcp"],
-    "cwd": "/path/to/FireMemory"
+  "mcpServers": {
+    "firequery": {
+      "command": "wsl",
+      "args": ["fquery", "mcp"]
+    }
   }
 }
 ```
 
-## Claude Code
-
-If your Claude Code setup supports MCP server registration by command, use:
+### Brainfile por projeto
 
 ```json
 {
-  "name": "firequery",
-  "transport": {
-    "type": "stdio",
-    "command": "C:\\Projects\\FireMemory\\bin\\fquery.exe",
-    "args": ["mcp"],
-    "cwd": "C:\\Projects\\FireMemory"
+  "mcpServers": {
+    "firequery": {
+      "command": "fquery",
+      "args": ["mcp"],
+      "env": {
+        "FIREMEMORY_DEFAULT_BRAIN": "/caminho/para/projeto.fbrain"
+      }
+    }
   }
 }
 ```
 
-Recommended workflow:
-
-1. Keep one `.fbrain` per project or agent.
-2. Use `firequery.get_context` before long reasoning or coding turns.
-3. Use `firequery.remember` only when you want durable memory.
-
-## Codex
-
-If your Codex environment supports MCP command registration, use the same stdio command:
-
-```json
-{
-  "name": "firequery",
-  "transport": {
-    "type": "stdio",
-    "command": "C:\\Projects\\FireMemory\\bin\\fquery.exe",
-    "args": ["mcp"],
-    "cwd": "C:\\Projects\\FireMemory"
-  }
-}
-```
-
-Practical rule:
-
-- Codex should talk to FireQuery
-- FireQuery should talk to FireMemory
-
-## Cursor
-
-If Cursor MCP is enabled in your installation, register this command:
-
-```json
-{
-  "name": "firequery",
-  "transport": {
-    "type": "stdio",
-    "command": "C:\\Projects\\FireMemory\\bin\\fquery.exe",
-    "args": ["mcp"],
-    "cwd": "C:\\Projects\\FireMemory"
-  }
-}
-```
-
-Recommended usage:
-
-- `firequery.ask` for general retrieval-aware requests
-- `firequery.get_context` before large edits
-- `firequery.explain` for debugging memory decisions
-
-## Antigravity
-
-If Antigravity can attach to MCP over `stdio`, use the same command registration:
-
-```json
-{
-  "name": "firequery",
-  "transport": {
-    "type": "stdio",
-    "command": "C:\\Projects\\FireMemory\\bin\\fquery.exe",
-    "args": ["mcp"],
-    "cwd": "C:\\Projects\\FireMemory"
-  }
-}
-```
-
-If it cannot, wrap `fquery mcp` in the integration layer Antigravity expects.
-
-## Useful tool names
-
-- `firequery.ask`
-- `firequery.plan`
-- `firequery.remember`
-- `firequery.recall`
-- `firequery.get_context`
-- `firequery.explain`
-
-## Example request
-
-```json
-{
-  "version": "0.1",
-  "request_id": "req_context_001",
-  "language": "pt-BR",
-  "actor": {
-    "type": "agent",
-    "id": "support-agent"
-  },
-  "brain": "./agent.fbrain",
-  "input": {
-    "task": "responder Joao sobre erro fiscal apos atualizacao",
-    "budget_tokens": 1500
-  }
-}
-```
-
-## Notes
-
-- Client-specific config file names and UI screens may vary by product version.
-- The stable part on the FireMemory side is the command: `fquery mcp`.
-- The supported external architecture is always FireQuery first.
+Veja [docs/guides/](../../docs/guides/) para guias específicos por editor.

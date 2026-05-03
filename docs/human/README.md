@@ -2,16 +2,24 @@
 
 This track is for maintainers, operators, reviewers, and users of the project.
 
+> [Versão em Português (PT-BR)](../../README_pt-BR.md)
+
 ## Start Here
 
-- Project overview: [README.md](README.md)
-- Product vision: [docs/vision.md](docs/vision.md)
-- Roadmap: [docs/roadmap.md](docs/roadmap.md)
-- Changelog: [CHANGELOG.md](CHANGELOG.md)
-- Quick guide in PT-BR for Cursor: [docs/human/guia-cursor-ptbr.md](docs/human/guia-cursor-ptbr.md)
-- Cursor guide in English: [docs/human/cursor-guide-en.md](docs/human/cursor-guide-en.md)
-- Claude Code guide in English: [docs/human/claude-code-guide-en.md](docs/human/claude-code-guide-en.md)
-- Codex guide in English: [docs/human/codex-guide-en.md](docs/human/codex-guide-en.md)
+- Project overview: [README.md](../../README.md)
+- Product vision: [docs/vision.md](../vision.md)
+- Roadmap: [docs/roadmap.md](../roadmap.md)
+- FAQ: [docs/faq.md](../faq.md)
+- Changelog: [CHANGELOG.md](../../CHANGELOG.md)
+
+## Editor Setup Guides
+
+| Editor | English | Português |
+|--------|---------|-----------|
+| Cursor | [cursor-en.md](../guides/cursor-en.md) | [cursor-pt-BR.md](../guides/cursor-pt-BR.md) |
+| Claude Code | [claude-code-en.md](../guides/claude-code-en.md) | [claude-code-pt-BR.md](../guides/claude-code-pt-BR.md) |
+| Windsurf | [windsurf-en.md](../guides/windsurf-en.md) | [windsurf-pt-BR.md](../guides/windsurf-pt-BR.md) |
+| Zed | [zed-en.md](../guides/zed-en.md) | [zed-pt-BR.md](../guides/zed-pt-BR.md) |
 
 ## Product and Architecture
 

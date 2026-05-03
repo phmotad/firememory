@@ -7,6 +7,8 @@
 
 **Local-first semantic memory engine for AI agents.**
 
+> [Leia em Português (PT-BR)](README_pt-BR.md)
+
 FireMemory stores everything in a single `.fbrain` file — no server, no cloud, no configuration.
 Agents read and write memory through [MCP](https://modelcontextprotocol.io/) via `fquery mcp`.
 ML models (~325 MB) are downloaded automatically on first use.
