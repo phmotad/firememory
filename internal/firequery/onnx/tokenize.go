@@ -37,12 +37,13 @@ type encodedInput struct {
 
 // Encode tokenizes text and returns int64 slices matching ONNX int64 tensor types.
 func (t *tokenizer) Encode(text string) encodedInput {
-	enc := t.inner.Encode(text, true)
-
+	enc := t.inner.EncodeWithOptions(text, true,
+		tk.WithReturnTypeIDs(),
+		tk.WithReturnAttentionMask(),
+	)
 	ids := toInt64(enc.IDs)
 	mask := toInt64(enc.AttentionMask)
 	ttids := toInt64(enc.TypeIDs)
-
 	return encodedInput{
 		InputIDs:      ids,
 		AttentionMask: mask,
@@ -54,14 +55,15 @@ func (t *tokenizer) Encode(text string) encodedInput {
 // EncodeWords tokenizes text preserving word-to-subword alignment.
 // Returns the encodedInput plus a words_mask (1 at the first subword of each word, 0 elsewhere).
 func (t *tokenizer) EncodeWords(text string) (encodedInput, []int64) {
-	enc := t.inner.Encode(text, true)
-
+	enc := t.inner.EncodeWithOptions(text, true,
+		tk.WithReturnTypeIDs(),
+		tk.WithReturnAttentionMask(),
+		tk.WithReturnOffsets(),
+	)
 	ids := toInt64(enc.IDs)
 	mask := toInt64(enc.AttentionMask)
 	ttids := toInt64(enc.TypeIDs)
-
-	wordsMask := computeWordsMask(enc.WordIDs)
-
+	wordsMask := computeWordsMask(text, enc.Offsets)
 	return encodedInput{
 		InputIDs:      ids,
 		AttentionMask: mask,
@@ -70,21 +72,26 @@ func (t *tokenizer) EncodeWords(text string) (encodedInput, []int64) {
 	}, wordsMask
 }
 
-// computeWordsMask returns 1 at the first subword of each word, 0 elsewhere.
-// WordIDs maps each token position to its originating word index (or -1 for special tokens).
-func computeWordsMask(wordIDs []int) []int64 {
-	mask := make([]int64, len(wordIDs))
-	seen := map[int]bool{}
-	for i, wid := range wordIDs {
-		if wid < 0 {
-			continue
+// computeWordsMask returns 1 at the first subword token of each word, 0 elsewhere.
+// Special tokens have zero-width offsets [0,0] and are skipped.
+// A token is word-initial when its start offset is 0 (first word) or is
+// immediately preceded by whitespace in the original text.
+func computeWordsMask(text string, offsets []tk.Offset) []int64 {
+	mask := make([]int64, len(offsets))
+	for i, off := range offsets {
+		start, end := int(off[0]), int(off[1])
+		if start == end {
+			continue // special token (zero-width)
 		}
-		if !seen[wid] {
-			seen[wid] = true
+		if start == 0 || (start > 0 && isSpace(text[start-1])) {
 			mask[i] = 1
 		}
 	}
 	return mask
+}
+
+func isSpace(b byte) bool {
+	return b == ' ' || b == '\t' || b == '\n' || b == '\r'
 }
 
 func toInt64(src []uint32) []int64 {

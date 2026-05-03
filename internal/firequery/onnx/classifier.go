@@ -20,11 +20,19 @@ type embeddingClassifier struct {
 }
 
 func newEmbeddingClassifier(enc *encoder) *embeddingClassifier {
+	// IntentModelDeBERTaSmall == TriggerModelDeBERTaSmall (same string), so merge
+	// both description maps into one. Intent and trigger labels are disjoint.
+	combined := make(map[string]string, len(IntentLabelDescriptions)+len(TriggerLabelDescriptions))
+	for k, v := range IntentLabelDescriptions {
+		combined[k] = v
+	}
+	for k, v := range TriggerLabelDescriptions {
+		combined[k] = v
+	}
 	return &embeddingClassifier{
 		enc: enc,
 		labelDescriptions: map[string]map[string]string{
-			models.IntentModelDeBERTaSmall:   IntentLabelDescriptions,
-			models.TriggerModelDeBERTaSmall:  TriggerLabelDescriptions,
+			models.IntentModelDeBERTaSmall: combined,
 		},
 	}
 }
