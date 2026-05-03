@@ -7,39 +7,36 @@ from __future__ import annotations
 
 import argparse
 import hashlib
-import json
 import shutil
-import subprocess
 import sys
 import tarfile
 import tempfile
 from pathlib import Path
 from typing import Any
 
-REPO_ROOT     = Path(__file__).parent.parent.resolve()
-MANIFEST_PATH = REPO_ROOT / "internal" / "modelcache" / "manifest.json"
+REPO_ROOT = Path(__file__).parent.parent.resolve()
 
 MODELS: list[dict[str, Any]] = [
     {
-        "id":       "multilingual-e5-small",
-        "hf_id":    "intfloat/multilingual-e5-small",
-        "dir":      "multilingual-e5-small",
-        "archive":  "multilingual-e5-small-onnx-int8.tar.gz",
-        "type":     "encoder",
+        "id": "multilingual-e5-small",
+        "hf_id": "intfloat/multilingual-e5-small",
+        "dir": "multilingual-e5-small",
+        "archive": "multilingual-e5-small-onnx-int8.tar.gz",
+        "type": "encoder",
     },
     {
-        "id":       "deberta-v3-small",
-        "hf_id":    "microsoft/deberta-v3-small",
-        "dir":      "deberta-v3-small",
-        "archive":  "deberta-v3-small-onnx-int8.tar.gz",
-        "type":     "encoder",
+        "id": "deberta-v3-small",
+        "hf_id": "microsoft/deberta-v3-small",
+        "dir": "deberta-v3-small",
+        "archive": "deberta-v3-small-onnx-int8.tar.gz",
+        "type": "encoder",
     },
     {
-        "id":       "gliner-small-v2.1",
-        "hf_id":    "urchade/gliner_small-v2.1",
-        "dir":      "gliner-small-v2.1",
-        "archive":  "gliner-small-v2.1-onnx-int8.tar.gz",
-        "type":     "gliner",
+        "id": "gliner-small-v2.1",
+        "hf_id": "onnx-community/gliner_small-v2.1",
+        "dir": "gliner-small-v2.1",
+        "archive": "gliner-small-v2.1-onnx-int8.tar.gz",
+        "type": "gliner",
     },
 ]
 
@@ -59,6 +56,13 @@ def sha256_file(path: Path) -> str:
         for chunk in iter(lambda: f.read(1 << 20), b""):
             h.update(chunk)
     return h.hexdigest()
+
+def _die(msg: str) -> None:
+    print(f"\nERROR: {msg}", file=sys.stderr)
+    sys.exit(1)
+
+def _report_size(p: Path) -> None:
+    print(f"  model.onnx: {p.stat().st_size // 1_000_000} MB")
 
 def export_encoder(hf_id: str, out_dir: Path, quantize: bool) -> None:
     try:
@@ -98,109 +102,54 @@ def export_encoder(hf_id: str, out_dir: Path, quantize: bool) -> None:
             shutil.copy(src, out_dir / name)
 
     shutil.rmtree(fp32_dir)
+
     _report_size(final_onnx)
 
 def export_gliner(hf_id: str, out_dir: Path, quantize: bool) -> None:
+    """
+    Download prebuilt ONNX GLiNER model from ONNX Community.
+    """
+
     try:
-        from gliner import GLiNER
-        from onnxruntime.quantization import quantize_dynamic, QuantType
-    except ImportError as e:
-        _die(f"Missing dependency: {e}")
+        from huggingface_hub import snapshot_download
+    except ImportError:
+        _die("huggingface_hub not installed")
 
-    print(f"  Loading GLiNER {hf_id}...")
-
-    model = GLiNER.from_pretrained(hf_id)
-    tokenizer = model.data_processor.transformer_tokenizer
+    print(f"  Downloading prebuilt ONNX GLiNER model: {hf_id}")
 
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    fp32_onnx  = out_dir / "model_fp32.onnx"
+    snapshot_download(
+        repo_id=hf_id,
+        local_dir=str(out_dir),
+        local_dir_use_symlinks=False,
+    )
+
+    onnx_files = list(out_dir.rglob("*.onnx"))
+
+    if not onnx_files:
+        _die("No ONNX file found in downloaded GLiNER model")
+
+    model_onnx = onnx_files[0]
     final_onnx = out_dir / "model.onnx"
 
-    exported = False
+    if model_onnx.resolve() != final_onnx.resolve():
+        shutil.copy(model_onnx, final_onnx)
 
-    if not exported:
-        print("  Built-in ONNX export not available; using torch.onnx.export...")
-        _export_gliner_via_torch(model, fp32_onnx)
+    print(f"  Using ONNX model: {final_onnx}")
 
-    if quantize:
-        print("  Quantizing GLiNER to INT8 (dynamic)...")
-        quantize_dynamic(
-            str(fp32_onnx),
-            str(final_onnx),
-            weight_type=QuantType.QInt8,
-        )
-        fp32_onnx.unlink(missing_ok=True)
-    else:
-        fp32_onnx.rename(final_onnx)
+    for p in list(out_dir.rglob("*")):
+        if p.is_file():
+            keep = (
+                p.name.endswith(".onnx")
+                or p.name.endswith(".json")
+                or p.name in TOKENIZER_FILES
+            )
 
-    tokenizer.save_pretrained(str(out_dir))
-
-    for p in out_dir.iterdir():
-        if p.is_dir():
-            shutil.rmtree(p)
+            if not keep:
+                p.unlink(missing_ok=True)
 
     _report_size(final_onnx)
-
-def _try_gliner_builtin_export(model: Any, out_dir: Path, fp32_onnx: Path) -> bool:
-    tmp = out_dir / "_gliner_export_tmp"
-    tmp.mkdir(exist_ok=True)
-
-    try:
-        if hasattr(model, "save_pretrained_onnx"):
-            model.save_pretrained_onnx(str(tmp))
-        elif hasattr(model, "export_to_onnx"):
-            model.export_to_onnx(str(tmp / "model.onnx"))
-        else:
-            shutil.rmtree(tmp, ignore_errors=True)
-            return False
-
-        candidates = list(tmp.rglob("*.onnx"))
-
-        if not candidates:
-            shutil.rmtree(tmp, ignore_errors=True)
-            return False
-
-        shutil.move(str(candidates[0]), str(fp32_onnx))
-        shutil.rmtree(tmp, ignore_errors=True)
-        return True
-
-    except Exception as exc:
-        print(f"  Built-in export raised {exc!r}, falling back...")
-        shutil.rmtree(tmp, ignore_errors=True)
-        return False
-
-def _export_gliner_via_torch(model: Any, out_path: Path) -> None:
-    import torch
-
-    inner = model.model
-    inner.eval()
-
-    device = next(inner.parameters()).device
-    max_len = int(getattr(model, "max_len", getattr(model, "max_length", 384)))
-
-    dummy_ids        = torch.zeros(1, max_len, dtype=torch.long, device=device)
-    dummy_attn       = torch.ones(1,  max_len, dtype=torch.long, device=device)
-    dummy_words_mask = torch.zeros(1, max_len, dtype=torch.long, device=device)
-    dummy_words_mask[0, 1] = 1
-    dummy_text_len   = torch.tensor([1], dtype=torch.long, device=device)
-
-    torch.onnx.export(
-        inner,
-        (dummy_ids, dummy_attn, dummy_words_mask, dummy_text_len),
-        str(out_path),
-        input_names=["input_ids", "attention_mask", "words_mask", "text_lengths"],
-        output_names=["logits"],
-        dynamic_axes={
-            "input_ids": {0: "batch", 1: "seq_len"},
-            "attention_mask": {0: "batch", 1: "seq_len"},
-            "words_mask": {0: "batch", 1: "seq_len"},
-            "text_lengths": {0: "batch"},
-            "logits": {0: "batch", 1: "num_words", 2: "num_words"},
-        },
-        opset_version=14,
-        do_constant_folding=True,
-    )
 
 def make_archive(model_dir: Path, dest_dir: Path, dir_name: str, archive_name: str) -> Path:
     dest_dir.mkdir(parents=True, exist_ok=True)
@@ -210,19 +159,14 @@ def make_archive(model_dir: Path, dest_dir: Path, dir_name: str, archive_name: s
     print(f"  Packing {archive_name}...")
 
     with tarfile.open(archive_path, "w:gz", compresslevel=6) as tf:
-        for fp in sorted(model_dir.iterdir()):
+        for fp in sorted(model_dir.rglob("*")):
             if fp.is_file():
-                tf.add(str(fp), arcname=f"{dir_name}/{fp.name}")
+                relative = fp.relative_to(model_dir)
+                tf.add(str(fp), arcname=f"{dir_name}/{relative}")
 
     print(f"  Archive: {archive_path}")
+
     return archive_path
-
-def _report_size(p: Path) -> None:
-    print(f"  model.onnx: {p.stat().st_size // 1_000_000} MB")
-
-def _die(msg: str) -> None:
-    print(f"\nERROR: {msg}", file=sys.stderr)
-    sys.exit(1)
 
 def main() -> None:
     parser = argparse.ArgumentParser()
@@ -240,6 +184,7 @@ def main() -> None:
         print("Kaggle mode enabled.")
 
     output_dir = Path(args.output_dir)
+
     selected = set(args.models) if args.models else {m["id"] for m in MODELS}
 
     checksums = {}
