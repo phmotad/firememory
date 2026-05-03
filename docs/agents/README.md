@@ -6,31 +6,28 @@ This track is for AI coding agents and automation tooling working inside the rep
 
 Read first:
 
-- [AGENTS.md](AGENTS.md)
+- [AGENTS.md](../../AGENTS.md)
 
 `AGENTS.md` is the canonical scope, rule, and precedence file.
 
 ## Delivery Order
 
-Use the mandatory sequence defined in:
-
-- [AGENTS.md](AGENTS.md)
-- [docs/TASKS.md](docs/TASKS.md)
+Use the mandatory sequence defined in [AGENTS.md](../../AGENTS.md).
 
 ## Required Specs
 
 Before implementing or changing behavior, consult the relevant spec:
 
-- Vision: [docs/vision.md](docs/vision.md)
-- Architecture: [docs/architecture.md](docs/architecture.md)
-- Domain: [docs/domain.md](docs/domain.md)
-- Brainfile format: [docs/brainfile-format.md](docs/brainfile-format.md)
-- Embeddings: [docs/embedding.md](docs/embedding.md)
-- FireMemory internal MCP: [docs/mcp-integration.md](docs/mcp-integration.md)
-- FireQuery architecture: [docs/firequery-architecture.md](docs/firequery-architecture.md)
-- FireQuery contract: [docs/firequery-contract.md](docs/firequery-contract.md)
-- FireQuery MCP: [docs/firequery-mcp.md](docs/firequery-mcp.md)
-- FireQuery runtime: [docs/firequery-runtime.md](docs/firequery-runtime.md)
+- Vision: [docs/vision.md](../vision.md)
+- Architecture: [docs/reference/architecture.md](../reference/architecture.md)
+- Domain: [docs/reference/domain.md](../reference/domain.md)
+- Brainfile format: [docs/reference/brainfile-format.md](../reference/brainfile-format.md)
+- Embeddings: [docs/reference/embedding.md](../reference/embedding.md)
+- FireMemory internal MCP: [docs/reference/mcp-integration.md](../reference/mcp-integration.md)
+- FireQuery architecture: [docs/reference/firequery-architecture.md](../reference/firequery-architecture.md)
+- FireQuery contract: [docs/reference/firequery-contract.md](../reference/firequery-contract.md)
+- FireQuery MCP: [docs/reference/firequery-mcp.md](../reference/firequery-mcp.md)
+- FireQuery runtime: [docs/reference/firequery-runtime.md](../reference/firequery-runtime.md)
 
 ## Validation Rules
 
@@ -58,7 +55,7 @@ When changing runtime behavior, also inspect:
 
 ## Operational References
 
-- Compatibility: [docs/compatibility.md](docs/compatibility.md)
-- Production hardening: [docs/production-hardening.md](docs/production-hardening.md)
-- Release checklists: [docs/release-checklists.md](docs/release-checklists.md)
-- Release candidate: [docs/release-candidate.md](docs/release-candidate.md)
+- Compatibility: [docs/operations/compatibility.md](../operations/compatibility.md)
+- Production hardening: [docs/operations/production-hardening.md](../operations/production-hardening.md)
+- Release checklists: [docs/release/release-checklists.md](../release/release-checklists.md)
+- Release candidate: [docs/release/release-candidate.md](../release/release-candidate.md)

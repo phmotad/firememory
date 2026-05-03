@@ -51,3 +51,6 @@ __pycache__/
 *.pyc
 *.pyo
 .venv-firequery/
+docs/TASKS.md
+
+# Development task lists (local only)

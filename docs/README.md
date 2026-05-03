@@ -1,14 +1,46 @@
 # Documentation
 
-This repository separates documentation into two entry points:
+> [README em Português](../README_pt-BR.md)
 
-- Human documentation: [docs/human/README.md](docs/human/README.md)
-- Agent documentation: [docs/agents/README.md](docs/agents/README.md)
+This repository organizes documentation into tracks and sections.
 
-Global AI-agent instructions live in:
+## Tracks
 
-- [AGENTS.md](AGENTS.md)
+| Track | Audience | Entry point |
+|-------|----------|-------------|
+| Human | Users, operators, maintainers | [human/README.md](human/README.md) |
+| Agent | AI coding agents | [agents/README.md](agents/README.md) |
 
-Use the human track for product, operations, release, and onboarding.
+Global agent instructions: [AGENTS.md](../AGENTS.md)
 
-Use the agent track for implementation order, contracts, constraints, and delivery rules.
+---
+
+## Sections
+
+### [guides/](guides/)
+Setup guides for connecting editors to FireMemory via MCP.
+Cursor, Claude Code, Windsurf, Zed — English and PT-BR.
+
+### [reference/](reference/)
+Technical specifications: architecture, domain model, brainfile format,
+embeddings, models, FireQuery internals.
+
+### [operations/](operations/)
+Day-to-day operation: local deploy, backup/restore, recovery, compatibility,
+production hardening.
+
+### [release/](release/)
+Release process: checklists, release candidate procedures.
+
+### [reports/](reports/)
+Validation and test reports.
+
+---
+
+## Key documents (root)
+
+- [vision.md](vision.md) — product philosophy
+- [roadmap.md](roadmap.md) — milestones and planned features
+- [faq.md](faq.md) — frequently asked questions
+- [../CONTRIBUTING.md](../CONTRIBUTING.md) — how to contribute
+- [../CHANGELOG.md](../CHANGELOG.md) — release history

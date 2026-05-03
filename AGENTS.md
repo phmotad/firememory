@@ -158,27 +158,26 @@ Start here:
 ### Core implementation references
 
 - Vision: [docs/vision.md](docs/vision.md)
-- Architecture: [docs/architecture.md](docs/architecture.md)
-- Domain: [docs/domain.md](docs/domain.md)
-- Brainfile format: [docs/brainfile-format.md](docs/brainfile-format.md)
-- Embeddings: [docs/embedding.md](docs/embedding.md)
-- FireMemory MCP: [docs/mcp-integration.md](docs/mcp-integration.md)
-- FireQuery architecture: [docs/firequery-architecture.md](docs/firequery-architecture.md)
-- FireQuery contract: [docs/firequery-contract.md](docs/firequery-contract.md)
-- FireQuery MCP: [docs/firequery-mcp.md](docs/firequery-mcp.md)
-- FireQuery runtime: [docs/firequery-runtime.md](docs/firequery-runtime.md)
+- Architecture: [docs/reference/architecture.md](docs/reference/architecture.md)
+- Domain: [docs/reference/domain.md](docs/reference/domain.md)
+- Brainfile format: [docs/reference/brainfile-format.md](docs/reference/brainfile-format.md)
+- Embeddings: [docs/reference/embedding.md](docs/reference/embedding.md)
+- FireMemory MCP: [docs/reference/mcp-integration.md](docs/reference/mcp-integration.md)
+- FireQuery architecture: [docs/reference/firequery-architecture.md](docs/reference/firequery-architecture.md)
+- FireQuery contract: [docs/reference/firequery-contract.md](docs/reference/firequery-contract.md)
+- FireQuery MCP: [docs/reference/firequery-mcp.md](docs/reference/firequery-mcp.md)
+- FireQuery runtime: [docs/reference/firequery-runtime.md](docs/reference/firequery-runtime.md)
 - Roadmap: [docs/roadmap.md](docs/roadmap.md)
-- Tasks: [docs/TASKS.md](docs/TASKS.md)
 
 ### Operational references
 
-- Local deploy: [docs/deploy-local.md](docs/deploy-local.md)
-- Backup and restore: [docs/backup-restore.md](docs/backup-restore.md)
-- Recovery: [docs/recovery.md](docs/recovery.md)
-- Compatibility: [docs/compatibility.md](docs/compatibility.md)
-- Production hardening: [docs/production-hardening.md](docs/production-hardening.md)
-- Release checklists: [docs/release-checklists.md](docs/release-checklists.md)
-- Release candidate: [docs/release-candidate.md](docs/release-candidate.md)
+- Local deploy: [docs/operations/deploy-local.md](docs/operations/deploy-local.md)
+- Backup and restore: [docs/operations/backup-restore.md](docs/operations/backup-restore.md)
+- Recovery: [docs/operations/recovery.md](docs/operations/recovery.md)
+- Compatibility: [docs/operations/compatibility.md](docs/operations/compatibility.md)
+- Production hardening: [docs/operations/production-hardening.md](docs/operations/production-hardening.md)
+- Release checklists: [docs/release/release-checklists.md](docs/release/release-checklists.md)
+- Release candidate: [docs/release/release-candidate.md](docs/release/release-candidate.md)
 - Changelog: [CHANGELOG.md](CHANGELOG.md)
 
 ## Precedence

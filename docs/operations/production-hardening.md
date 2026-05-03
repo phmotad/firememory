@@ -121,7 +121,7 @@ The project should only be called production-ready when:
 
 ## Operational Docs
 
-- local deploy guide: `docs/deploy-local.md`
-- backup and restore guide: `docs/backup-restore.md`
-- recovery guide: `docs/recovery.md`
-- release checklists: `docs/release-checklists.md`
+- local deploy guide: `docs/operations/deploy-local.md`
+- backup and restore guide: `docs/operations/backup-restore.md`
+- recovery guide: `docs/operations/recovery.md`
+- release checklists: `docs/release/release-checklists.md`

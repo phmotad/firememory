@@ -56,7 +56,7 @@ Signal:
 Action:
 
 1. Verify the binary version being used.
-2. Check the compatibility policy in `docs/compatibility.md`.
+2. Check the compatibility policy in `docs/operations/compatibility.md`.
 3. Use the matching binary or restore a compatible backup.
 
 ## If the Manifest Is Missing

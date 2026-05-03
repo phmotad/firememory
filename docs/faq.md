@@ -19,7 +19,7 @@ No. Everything stays local. The only outbound network calls are:
 
 No. All three models run on CPU with INT8 quantization. A modern laptop handles
 inference in under 100 ms per call. GPU acceleration is optional (see
-[docs/models.md](models.md)).
+[docs/reference/models.md](reference/models.md)).
 
 **Can I use FireMemory without the ML models?**
 
