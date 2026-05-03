@@ -5,10 +5,8 @@ import (
 	"regexp"
 	"sort"
 	"strings"
-	"time"
 
 	"github.com/phmotad/firememory/internal/dedup"
-	"github.com/phmotad/firememory/internal/memory"
 )
 
 var (
@@ -30,8 +28,8 @@ var technicalTerms = map[string]struct{}{
 	"nfe": {}, "nf-e": {}, "postgres": {}, "sql": {}, "sync": {}, "vector": {}, "versao": {}, "versão": {},
 }
 
-var nonEntityNameWords = map[string]struct{}{
-	"Cliente": {}, "Clientes": {}, "Servidor": {}, "Sistema": {}, "Versao": {}, "Versão": {},
+var nonEntityNameWords = map[string]struct{}{ //nolint:misspell
+	"Cliente": {}, "Clientes": {}, "Servidor": {}, "Sistema": {}, "Versao": {}, "Versão": {}, //nolint:misspell
 }
 
 type Extractor interface {
@@ -394,15 +392,4 @@ func dedupeFacts(facts []ExtractedFact) []ExtractedFact {
 	})
 
 	return out
-}
-
-func extractedEntityToMemory(entity ExtractedEntity, sourceMemoryID string) memory.Entity {
-	return memory.Entity{
-		ID:             entity.Type + ":" + entity.Name,
-		Name:           entity.Name,
-		Type:           entity.Type,
-		Confidence:     entity.Confidence,
-		SourceMemoryID: sourceMemoryID,
-		CreatedAt:      time.Now().UTC(),
-	}
 }

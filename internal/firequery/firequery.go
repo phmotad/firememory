@@ -7,8 +7,8 @@ import (
 
 	"github.com/phmotad/firememory/internal/firequery/doctor"
 	fqmcp "github.com/phmotad/firememory/internal/firequery/mcp"
-	fqruntime "github.com/phmotad/firememory/internal/firequery/runtime"
 	"github.com/phmotad/firememory/internal/firequery/pipeline"
+	fqruntime "github.com/phmotad/firememory/internal/firequery/runtime"
 )
 
 var (

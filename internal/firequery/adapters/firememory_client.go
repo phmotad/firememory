@@ -202,7 +202,7 @@ func callSync(eng engine.Engine, request contract.OperationRequest) (contract.Op
 	}, nil
 }
 
-func stringValue(input map[string]any, key, fallback string) string {
+func stringValue(input map[string]any, key, fallback string) string { //nolint:unparam
 	if value, ok := input[key].(string); ok && strings.TrimSpace(value) != "" {
 		return value
 	}

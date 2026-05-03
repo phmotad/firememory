@@ -189,7 +189,7 @@ func envOrDefault(lookupEnv EnvLookup, key, fallback string) string {
 	return value
 }
 
-func envTruthy(lookupEnv EnvLookup, key string) bool {
+func envTruthy(lookupEnv EnvLookup, key string) bool { //nolint:unparam
 	value := strings.ToLower(strings.TrimSpace(envOrDefault(lookupEnv, key, "")))
 	switch value {
 	case "1", "true", "yes", "on", "enabled":
