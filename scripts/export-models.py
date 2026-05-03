@@ -117,7 +117,7 @@ def export_gliner(hf_id: str, out_dir: Path, quantize: bool) -> None:
     fp32_onnx  = out_dir / "model_fp32.onnx"
     final_onnx = out_dir / "model.onnx"
 
-    exported = _try_gliner_builtin_export(model, out_dir, fp32_onnx)
+    exported = False
 
     if not exported:
         print("  Built-in ONNX export not available; using torch.onnx.export...")
