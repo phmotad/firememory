@@ -1,24 +1,39 @@
 #!/usr/bin/env bash
-# Downloads prebuilt libtokenizers.a for linux amd64 and aarch64.
-# Output: tokenizers-lib/linux-amd64/libtokenizers.a
-#          tokenizers-lib/linux-aarch64/libtokenizers.a
+# Downloads prebuilt libtokenizers.a for the current platform.
+# Output: tokenizers-lib/<os>-<arch>/libtokenizers.a
 set -euo pipefail
 
 BASE="https://github.com/daulet/tokenizers/releases/latest/download"
+OS="$(uname -s)"
 
-download_for() {
-  local ARCH="$1"     # e.g. amd64, aarch64
-  local LABEL="$2"    # e.g. linux-amd64, linux-aarch64
-  local DEST="tokenizers-lib/${LABEL}"
+mkdir -p tokenizers-lib
 
-  mkdir -p "${DEST}"
-  echo "Downloading libtokenizers for ${LABEL}..."
-  curl -fsSL "${BASE}/libtokenizers.linux-${ARCH}.tar.gz" \
-    | tar -xz -C "${DEST}"
-  echo "  → ${DEST}/libtokenizers.a"
-}
+case "${OS}" in
+  Linux)
+    for ARCH in x86_64 aarch64; do
+      LABEL="linux-$([ "${ARCH}" = "x86_64" ] && echo "amd64" || echo "aarch64")"
+      DEST="tokenizers-lib/${LABEL}"
+      mkdir -p "${DEST}"
+      echo "Downloading libtokenizers for linux-${ARCH}..."
+      curl -fsSL "${BASE}/libtokenizers.linux-${ARCH}.tar.gz" | tar -xz -C "${DEST}"
+      echo "  → ${DEST}/libtokenizers.a"
+    done
+    ;;
 
-download_for "x86_64"  "linux-amd64"
-download_for "aarch64" "linux-aarch64"
+  Darwin)
+    for ARCH in arm64 x86_64; do
+      LABEL="darwin-$([ "${ARCH}" = "x86_64" ] && echo "amd64" || echo "arm64")"
+      DEST="tokenizers-lib/${LABEL}"
+      mkdir -p "${DEST}"
+      echo "Downloading libtokenizers for darwin-${ARCH}..."
+      curl -fsSL "${BASE}/libtokenizers.darwin-${ARCH}.tar.gz" | tar -xz -C "${DEST}"
+      echo "  → ${DEST}/libtokenizers.a"
+    done
+    ;;
+
+  *)
+    echo "No tokenizers download needed for ${OS}"
+    ;;
+esac
 
 echo "libtokenizers ready in tokenizers-lib/"

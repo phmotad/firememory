@@ -22,7 +22,7 @@ ML models (~325 MB) are downloaded automatically on first use.
 curl -fsSL https://raw.githubusercontent.com/phmotad/firememory/main/scripts/install.sh | bash
 ```
 
-**Windows** (PowerShell)
+**Windows** (PowerShell) — installs `fmem`; `fquery` requires WSL2 or Docker
 ```powershell
 irm https://raw.githubusercontent.com/phmotad/firememory/main/scripts/install.ps1 | iex
 ```

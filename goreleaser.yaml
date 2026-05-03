@@ -7,40 +7,39 @@ before:
     - go mod tidy
 
 builds:
-  # fmem: pure Go, no CGO — cross-compiles cleanly to all targets.
-  - id: fmem
+  # fmem: pure Go, no CGO. Each runner builds for its own OS in split mode.
+  - id: fmem-unix
     binary: fmem
     main: ./cmd/fmem
     env:
       - CGO_ENABLED=0
-    goos:
-      - linux
-      - darwin
-      - windows
-    goarch:
-      - amd64
-      - arm64
-    ignore:
-      - goos: windows
-        goarch: arm64
+    goos: [linux, darwin]
+    goarch: [amd64, arm64]
     ldflags:
       - -s -w
       - -X github.com/phmotad/firememory/internal/version.Version={{.Version}}
 
-  # fquery: CGO + ONNX. Linux only (amd64 + arm64 cross-compiled).
-  - id: fquery
+  - id: fmem-windows
+    binary: fmem
+    main: ./cmd/fmem
+    env:
+      - CGO_ENABLED=0
+    goos: [windows]
+    goarch: [amd64]
+    ldflags:
+      - -s -w
+      - -X github.com/phmotad/firememory/internal/version.Version={{.Version}}
+
+  # fquery: CGO + ONNX. Linux and macOS only (separate build IDs for each OS).
+  - id: fquery-linux
     binary: fquery
     main: ./cmd/fquery
-    tags:
-      - onnx
+    tags: [onnx]
     env:
       - CGO_ENABLED=1
       - CGO_LDFLAGS=-L./tokenizers-lib/linux-amd64
-    goos:
-      - linux
-    goarch:
-      - amd64
-      - arm64
+    goos: [linux]
+    goarch: [amd64, arm64]
     ldflags:
       - -s -w
       - -X github.com/phmotad/firememory/internal/version.Version={{.Version}}
@@ -53,35 +52,47 @@ builds:
           - CXX=aarch64-linux-gnu-g++
           - CGO_LDFLAGS=-L./tokenizers-lib/linux-aarch64
 
-archives:
-  # fmem: pure Go, all platforms. No bundled libs needed.
-  - id: fmem-archive
-    builds:
-      - fmem
-    formats:
-      - tar.gz
-    format_overrides:
-      - goos: windows
-        formats:
-          - zip
-    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Binary }}_{{ .Os }}_{{ .Arch }}"
-    files:
-      - LICENSE
-      - README.md
+  - id: fquery-darwin
+    binary: fquery
+    main: ./cmd/fquery
+    tags: [onnx]
+    env:
+      - CGO_ENABLED=1
+      - CGO_LDFLAGS=-L./tokenizers-lib/darwin-arm64
+    goos: [darwin]
+    goarch: [arm64, amd64]
+    ldflags:
+      - -s -w
+      - -X github.com/phmotad/firememory/internal/version.Version={{.Version}}
+    overrides:
+      - goos: darwin
+        goarch: amd64
+        env:
+          - CGO_ENABLED=1
+          - CC=/usr/local/bin/cc-x86_64
+          - CGO_LDFLAGS=-L./tokenizers-lib/darwin-amd64
 
-  # fquery: Linux only. Bundle the ORT shared library alongside the binary.
-  - id: fquery-archive
-    builds:
-      - fquery
-    formats:
-      - tar.gz
-    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Binary }}_{{ .Os }}_{{ .Arch }}"
+archives:
+  # Linux + macOS: combined archive with fmem + fquery + ORT lib.
+  - id: unix-archive
+    builds: [fmem-unix, fquery-linux, fquery-darwin]
+    formats: [tar.gz]
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
     files:
       - LICENSE
       - README.md
-      - src: ort-lib/*
+      - src: ort-lib/{{ .Os }}/*
         dst: .
         strip_parent: true
+
+  # Windows: fmem only (fquery is Linux/macOS only).
+  - id: windows-archive
+    builds: [fmem-windows]
+    formats: [zip]
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    files:
+      - LICENSE
+      - README.md
 
 checksum:
   name_template: SHA256SUMS
@@ -107,8 +118,7 @@ changelog:
 
 dockers:
   - id: fquery-docker
-    ids:
-      - fquery
+    ids: [fquery-linux]
     goos: linux
     goarch: amd64
     image_templates:

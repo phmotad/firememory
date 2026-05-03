@@ -63,10 +63,12 @@ Expand-Archive -Path $ZipPath -DestinationPath $Tmp -Force
 
 New-Item -ItemType Directory -Force -Path $InstallDir | Out-Null
 
-$Src = Join-Path $Tmp "firememory_${Version}_windows_${GoArch}"
-# GoReleaser archives have the binary at the root of the archive.
-Copy-Item (Join-Path $Tmp "fmem.exe")       (Join-Path $InstallDir "fmem.exe")   -Force
-Copy-Item (Join-Path $Tmp "fquery.exe")     (Join-Path $InstallDir "fquery.exe") -Force
+Copy-Item (Join-Path $Tmp "fmem.exe") (Join-Path $InstallDir "fmem.exe") -Force
+# fquery is Linux/macOS only — not included in Windows archives.
+$HasFquery = Test-Path (Join-Path $Tmp "fquery.exe")
+if ($HasFquery) {
+    Copy-Item (Join-Path $Tmp "fquery.exe") (Join-Path $InstallDir "fquery.exe") -Force
+}
 if (Test-Path (Join-Path $Tmp "onnxruntime.dll")) {
     Copy-Item (Join-Path $Tmp "onnxruntime.dll") (Join-Path $InstallDir "onnxruntime.dll") -Force
 }
@@ -86,8 +88,16 @@ Remove-Item $Tmp -Recurse -Force
 Write-Host ""
 Write-Host "Installed:"
 Write-Host "  $InstallDir\fmem.exe"
-Write-Host "  $InstallDir\fquery.exe"
+if ($HasFquery) {
+    Write-Host "  $InstallDir\fquery.exe"
+}
 Write-Host ""
 Write-Host "Next steps:"
 Write-Host "  fmem init $env:USERPROFILE\my.fbrain    # create a brainfile"
-Write-Host "  fquery mcp                               # start MCP server (downloads models once)"
+if ($HasFquery) {
+    Write-Host "  fquery mcp                               # start MCP server (downloads models once)"
+} else {
+    Write-Host ""
+    Write-Host "Note: fquery (MCP server) is available for Linux and macOS."
+    Write-Host "      On Windows, use WSL2 or Docker to run fquery mcp."
+}
