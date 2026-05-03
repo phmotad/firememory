@@ -1,0 +1,46 @@
+name: Feature request
+description: Suggest a new feature or improvement
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before requesting a new feature, please check the [roadmap](docs/roadmap.md) and open issues.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem this feature solves
+      description: What use case or pain point does this address?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: How would this work from the user's perspective? CLI commands, API changes, etc.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - FireMemory core (remember/recall/sync/context)
+        - CLI (fmem / fquery)
+        - MCP / FireQuery
+        - Models / inference
+        - Storage / Brainfile format
+        - Installation / distribution
+        - Documentation
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Any workarounds you've tried or other approaches you considered

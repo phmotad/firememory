@@ -1,0 +1,64 @@
+name: Bug report
+description: Report a bug in FireMemory or FireQuery
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug. Please fill out the sections below.
+
+  - type: input
+    id: version
+    attributes:
+      label: FireMemory version
+      description: Output of `fmem version`
+      placeholder: "v0.1-beta"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options:
+        - Linux (amd64)
+        - Linux (arm64)
+        - macOS (Intel)
+        - macOS (Apple Silicon)
+        - Windows (amd64)
+        - Windows (arm64)
+        - Docker
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Run `fmem remember ./agent.fbrain "..."`
+        2. Run `fmem recall ./agent.fbrain "..."`
+        3. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: Include the full error message or unexpected output
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Any other relevant information (logs, `.fbrain` state, agent setup)

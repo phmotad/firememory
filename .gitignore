@@ -1,0 +1,49 @@
+# Binaries
+bin/
+dist/
+
+# ORT working directory (created by scripts/download-ort.sh before GoReleaser runs)
+ort-lib/
+
+# Build artifacts
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Brainfiles (local memory databases — never commit)
+*.fbrain
+
+# Test artifacts
+*.test
+*.out
+reports/
+
+# Go workspace
+vendor/
+
+# Models cache (downloaded at runtime)
+.cache/
+*.onnx
+*.ort
+
+# Environment / secrets
+.env
+*.env
+!dist/firequery-models.env
+
+# Editor
+.vscode/
+.idea/
+*.suo
+*.user
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Python (optional backend)
+__pycache__/
+*.pyc
+*.pyo
+.venv-firequery/

@@ -1,0 +1,67 @@
+# Homebrew formula for FireMemory.
+#
+# This file belongs in the tap repository: phmotad/homebrew-firememory
+# Path: Formula/firememory.rb
+#
+# To publish: copy this file into that repo and fill in the real sha256 and
+# version values after the first `v*` GitHub Release is created.
+#
+# Users install via:
+#   brew tap phmotad/firememory
+#   brew install firememory
+
+class Firememory < Formula
+  desc "Local-first semantic memory engine for AI agents"
+  homepage "https://github.com/phmotad/firememory"
+  version "PLACEHOLDER_VERSION"
+  license "MIT"
+
+  on_macos do
+    on_arm do
+      url "https://github.com/phmotad/firememory/releases/download/v#{version}/firememory_#{version}_darwin_arm64.tar.gz"
+      sha256 "PLACEHOLDER_SHA256_DARWIN_ARM64"
+    end
+    on_intel do
+      url "https://github.com/phmotad/firememory/releases/download/v#{version}/firememory_#{version}_darwin_amd64.tar.gz"
+      sha256 "PLACEHOLDER_SHA256_DARWIN_AMD64"
+    end
+  end
+
+  on_linux do
+    on_arm do
+      url "https://github.com/phmotad/firememory/releases/download/v#{version}/firememory_#{version}_linux_arm64.tar.gz"
+      sha256 "PLACEHOLDER_SHA256_LINUX_ARM64"
+    end
+    on_intel do
+      url "https://github.com/phmotad/firememory/releases/download/v#{version}/firememory_#{version}_linux_amd64.tar.gz"
+      sha256 "PLACEHOLDER_SHA256_LINUX_AMD64"
+    end
+  end
+
+  def install
+    bin.install "fmem"
+
+    # The ONNX Runtime shared library must live next to fquery (or be on the
+    # dynamic linker search path). We install it to lib/ and wrap fquery with a
+    # small shell script that sets FIREMEMORY_ORT_LIB_PATH.
+    ort_lib = Dir["libonnxruntime*.dylib", "libonnxruntime*.so"].first
+    if ort_lib
+      lib.install ort_lib
+      ort_lib_path = "#{lib}/#{ort_lib}"
+      (bin/"fquery-bin").install "fquery"
+      (bin/"fquery").write <<~SH
+        #!/bin/sh
+        export FIREMEMORY_ORT_LIB_PATH="#{ort_lib_path}"
+        exec "#{bin}/fquery-bin" "$@"
+      SH
+      chmod 0755, bin/"fquery"
+    else
+      bin.install "fquery"
+    end
+  end
+
+  test do
+    assert_match version.to_s, shell_output("#{bin}/fmem version 2>&1", 1)
+    system "#{bin}/fquery", "doctor"
+  end
+end

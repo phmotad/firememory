@@ -1,0 +1,9 @@
+# Requirements for scripts/export-models.py
+# Install with: pip install -r scripts/requirements-export.txt
+
+torch>=2.1.0
+transformers>=4.40.0
+optimum[onnxruntime]>=1.19.0
+onnxruntime>=1.17.0
+gliner>=0.2.0
+huggingface_hub>=0.22.0
