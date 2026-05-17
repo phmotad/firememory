@@ -64,7 +64,6 @@ Expand-Archive -Path $ZipPath -DestinationPath $Tmp -Force
 New-Item -ItemType Directory -Force -Path $InstallDir | Out-Null
 
 Copy-Item (Join-Path $Tmp "fmem.exe") (Join-Path $InstallDir "fmem.exe") -Force
-# fquery is Linux/macOS only — not included in Windows archives.
 $HasFquery = Test-Path (Join-Path $Tmp "fquery.exe")
 if ($HasFquery) {
     Copy-Item (Join-Path $Tmp "fquery.exe") (Join-Path $InstallDir "fquery.exe") -Force
@@ -94,10 +93,5 @@ if ($HasFquery) {
 Write-Host ""
 Write-Host "Next steps:"
 Write-Host "  fmem init $env:USERPROFILE\my.fbrain    # create a brainfile"
-if ($HasFquery) {
-    Write-Host "  fquery mcp                               # start MCP server (downloads models once)"
-} else {
-    Write-Host ""
-    Write-Host "Note: fquery (MCP server) is available for Linux and macOS."
-    Write-Host "      On Windows, use WSL2 or Docker to run fquery mcp."
-}
+Write-Host "  fquery init-mcp claude-code              # configure editor MCP"
+Write-Host "  fquery mcp                               # start MCP server (downloads models once)"

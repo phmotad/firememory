@@ -45,13 +45,13 @@ O Windsurf armazena a configuração MCP em `~/.codeium/windsurf/mcp_config.json
 }
 ```
 
-**Windows** (`fquery` requer WSL2 ou Docker)
+**Windows**
 ```json
 {
   "mcpServers": {
     "firequery": {
-      "command": "wsl",
-      "args": ["fquery", "mcp"]
+      "command": "fquery",
+      "args": ["mcp"]
     }
   }
 }

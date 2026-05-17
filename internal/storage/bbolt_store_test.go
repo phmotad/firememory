@@ -177,12 +177,16 @@ func TestBboltStoreRejectsConcurrentOpen(t *testing.T) {
 	}
 	defer store.Close()
 
+	// The explicit lock file was removed; bbolt uses its OS-level flock with a
+	// 5-second timeout. A second concurrent open must fail. This test intentionally
+	// waits up to boltOpenTimeout (~5s) before the error is returned by bbolt.
 	second, err := OpenBboltStore(path)
-	if err != ErrStoreLocked {
-		t.Fatalf("expected ErrStoreLocked, got %v", err)
+	if err == nil {
+		second.Close()
+		t.Fatal("expected error on concurrent open, got nil")
 	}
 	if second != nil {
-		t.Fatalf("expected nil second store, got %#v", second)
+		t.Fatalf("expected nil second store on error, got %#v", second)
 	}
 }
 

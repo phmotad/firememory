@@ -6,8 +6,12 @@ import (
 	"io"
 	"os"
 	"strings"
+	"time"
 
+	"github.com/phmotad/firememory/internal/daemon"
+	"github.com/phmotad/firememory/internal/firequery/contract"
 	"github.com/phmotad/firememory/internal/firequery/doctor"
+	fqmcp "github.com/phmotad/firememory/internal/firequery/mcp"
 	fqonnx "github.com/phmotad/firememory/internal/firequery/onnx"
 	fqruntime "github.com/phmotad/firememory/internal/firequery/runtime"
 	"github.com/phmotad/firememory/internal/firequeryapp"
@@ -34,6 +38,8 @@ func run(args []string, stdout, stderr io.Writer, lookupEnv func(string) string,
 	}
 
 	switch args[0] {
+	case "daemon":
+		return runDaemon(args[1:], stderr, lookupEnv)
 	case "devices":
 		manager := firequeryapp.BuildRuntimeManager(lookupEnv)
 		return runDevices(stdout, manager, jsonOutput)
@@ -46,6 +52,8 @@ func run(args []string, stdout, stderr io.Writer, lookupEnv func(string) string,
 		return runModels(args[1:], stdout, stderr, lookupEnv, jsonOutput)
 	case "init-mcp":
 		return runInitMCP(args[1:], stdout, jsonOutput)
+	case "ui":
+		return runUI(args[1:], stdout, stderr)
 	case "version":
 		if jsonOutput {
 			return util.WriteJSON(stdout, map[string]any{"ok": true, "version": version.Version})
@@ -59,13 +67,67 @@ func run(args []string, stdout, stderr io.Writer, lookupEnv func(string) string,
 }
 
 func runMCP(stdout, stderr io.Writer, lookupEnv func(string) string) error {
+	ctx := context.Background()
+	port := daemonPort(lookupEnv)
+
+	// ── Proxy mode: connect to (or auto-start) the local daemon ──────────────
+	if tryConnectDaemon(ctx, port, stderr) {
+		return runMCPProxy(ctx, stdout, lookupEnv, port)
+	}
+
+	// ── Fallback: direct mode (no daemon available) ───────────────────────────
+	// This path runs when the daemon failed to start or the user disabled it.
+	fmt.Fprintln(stderr, "firequery: daemon unavailable, falling back to direct mode")
+	return runMCPDirect(ctx, stdout, stderr, lookupEnv)
+}
+
+// tryConnectDaemon pings the daemon and, if not reachable, forks a daemon
+// process and retries with exponential backoff (total ≤ 5 s).
+// Returns true when the daemon is ready.
+func tryConnectDaemon(ctx context.Context, port int, stderr io.Writer) bool {
+	if isDaemonAvailable(ctx, port) {
+		return true
+	}
+
+	if err := startDaemonProcess(); err != nil {
+		fmt.Fprintf(stderr, "firequery: start daemon: %v\n", err)
+		return false
+	}
+
+	delays := []time.Duration{100 * time.Millisecond, 200 * time.Millisecond,
+		400 * time.Millisecond, 800 * time.Millisecond, 1600 * time.Millisecond}
+	for _, d := range delays {
+		time.Sleep(d)
+		if isDaemonAvailable(ctx, port) {
+			return true
+		}
+	}
+	return false
+}
+
+// runMCPProxy starts the MCP stdio server in proxy mode. All tool calls are
+// forwarded to the daemon; no ONNX models are loaded in this process.
+func runMCPProxy(ctx context.Context, stdout io.Writer, lookupEnv func(string) string, port int) error {
+	_ = lookupEnv // reserved for future per-proxy config
+
+	daemonClient := daemon.NewClient(port)
+	proxyServer := fqmcp.NewServer()
+	proxyServer.RegisterDefaultTools(func(reqCtx context.Context, req contract.ExternalRequest) (contract.ExternalResponse, error) {
+		return daemonClient.Request(reqCtx, req)
+	})
+
+	transport := fqmcp.NewStdioServer(proxyServer, "firequery", version.Version)
+	return transport.Serve(ctx, os.Stdin, stdout)
+}
+
+// runMCPDirect is the original single-process MCP mode used as fallback.
+func runMCPDirect(ctx context.Context, stdout, stderr io.Writer, lookupEnv func(string) string) error {
 	modelsDir := fqonnx.DefaultModelsDir()
 	if v := lookupEnv("FIREMEMORY_MODELS_DIR"); v != "" {
 		modelsDir = v
 	}
 
-	// Auto-download models on first run. Progress goes to stderr (stdout is MCP JSON-RPC).
-	if err := modelcache.EnsureAll(context.Background(), modelsDir, stderr); err != nil {
+	if err := modelcache.EnsureAll(ctx, modelsDir, stderr); err != nil {
 		return fmt.Errorf("model setup: %w", err)
 	}
 
@@ -74,7 +136,7 @@ func runMCP(stdout, stderr io.Writer, lookupEnv func(string) string) error {
 		return err
 	}
 	transport := firequeryappTransport(service)
-	return transport.Serve(context.Background(), os.Stdin, stdout)
+	return transport.Serve(ctx, os.Stdin, stdout)
 }
 
 func runModels(args []string, stdout, stderr io.Writer, lookupEnv func(string) string, jsonOutput bool) error {
@@ -281,7 +343,8 @@ func writeUsage(w io.Writer) {
 	fmt.Fprintln(w, "usage: fquery <command>")
 	fmt.Fprintln(w, "")
 	fmt.Fprintln(w, "commands:")
-	fmt.Fprintln(w, "  mcp                          start MCP server over stdio (auto-downloads models on first run)")
+	fmt.Fprintln(w, "  mcp                          start MCP server (auto-starts daemon, proxies requests)")
+	fmt.Fprintln(w, "  daemon [--brain <path>]      start the ephemeral local daemon (owned by fquery mcp)")
 	fmt.Fprintln(w, "  init-mcp <client>            configure an AI coding client to use FireQuery")
 	fmt.Fprintln(w, "    clients: claude-code, cursor, windsurf, zed")
 	fmt.Fprintln(w, "    --print        dry-run: print the config that would be written")
@@ -292,10 +355,13 @@ func writeUsage(w io.Writer) {
 	fmt.Fprintln(w, "  models gc                    remove all cached models")
 	fmt.Fprintln(w, "  devices                      list available compute devices")
 	fmt.Fprintln(w, "  doctor                       run diagnostics")
+	fmt.Fprintln(w, "  ui [brainfile] [--port 8765] open knowledge graph browser")
 	fmt.Fprintln(w, "  version                      print version")
 	fmt.Fprintln(w, "")
 	fmt.Fprintln(w, "env:")
 	fmt.Fprintln(w, "  FIREMEMORY_MODELS_DIR              override model cache directory")
+	fmt.Fprintln(w, "  FIREMEMORY_DAEMON_PORT             daemon TCP port (default: 45555)")
+	fmt.Fprintln(w, "  FIREMEMORY_DEFAULT_BRAIN           default brain file path")
 	fmt.Fprintln(w, "  FIREQUERY_REQUIRE_REAL_MODELS=1    fail if models not available")
 	fmt.Fprintln(w, "  FIREQUERY_ENABLE_CUDA=1")
 	fmt.Fprintln(w, "  FIREQUERY_ENABLE_DIRECTML=1")

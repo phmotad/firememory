@@ -32,7 +32,9 @@ case "${OS}" in
     ;;
 
   *)
-    echo "No tokenizers download needed for ${OS}"
+    # Windows: libtokenizers must be built from source using Rust.
+    # See scripts/build-tokenizers-windows.ps1 or the CI workflow.
+    echo "No pre-built tokenizers for ${OS} — build from source with cargo."
     ;;
 esac
 

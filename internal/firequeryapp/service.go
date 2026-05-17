@@ -4,6 +4,7 @@ import (
 	"context"
 	"strings"
 
+	"github.com/phmotad/firememory/internal/engine"
 	"github.com/phmotad/firememory/internal/firequery"
 	"github.com/phmotad/firememory/internal/firequery/adapters"
 	"github.com/phmotad/firememory/internal/firequery/builder"
@@ -37,6 +38,49 @@ type ModelConfig struct {
 
 func BuildService(lookupEnv EnvLookup) (*firequery.Service, error) {
 	manager := BuildRuntimeManager(lookupEnv)
+
+	p, err := buildPipelineWithClient(lookupEnv,
+		validator.GuardedClient{Validator: validator.StrictValidator{}, Client: adapters.EngineClient{}})
+	if err != nil {
+		return nil, err
+	}
+
+	mcpServer := fqmcp.NewServer()
+	mcpServer.RegisterDefaultTools(func(ctx context.Context, request contract.ExternalRequest) (contract.ExternalResponse, error) {
+		return p.HandleMCP(ctx, request)
+	})
+
+	return firequery.New(firequery.Config{
+		Pipeline: p,
+		Runtime:  manager,
+		Doctor:   doctor.RuntimeReporter{Runtime: manager},
+		MCP:      mcpServer,
+	})
+}
+
+// BuildDaemonHandler builds a full pipeline backed by a pre-opened engine and
+// returns a handler func suitable for use by the daemon's HTTP server.
+// The returned handler runs the complete ML pipeline (intent/entity/similarity)
+// plus the engine operation — all inside the daemon process.
+func BuildDaemonHandler(lookupEnv EnvLookup, eng engine.Engine) (func(context.Context, contract.ExternalRequest) (contract.ExternalResponse, error), error) {
+	p, err := buildPipelineWithClient(lookupEnv,
+		validator.GuardedClient{
+			Validator: validator.StrictValidator{},
+			Client:    adapters.NewPersistentEngineClient(eng),
+		})
+	if err != nil {
+		return nil, err
+	}
+
+	return func(ctx context.Context, req contract.ExternalRequest) (contract.ExternalResponse, error) {
+		return p.HandleMCP(ctx, req)
+	}, nil
+}
+
+// buildPipelineWithClient constructs the ML pipeline with the given storage client.
+// This is the shared setup for both ephemeral (EngineClient) and daemon
+// (PersistentEngineClient) modes.
+func buildPipelineWithClient(lookupEnv EnvLookup, client adapters.FireMemoryClient) (*pipeline.DefaultPipeline, error) {
 	modelsConfig := ResolveModelConfig(lookupEnv)
 	modelsDir := envOrDefault(lookupEnv, envModelsDir, fqonnx.DefaultModelsDir())
 	requireReal := envTruthy(lookupEnv, envRequireReal)
@@ -51,9 +95,6 @@ func BuildService(lookupEnv EnvLookup) (*firequery.Service, error) {
 		if requireReal {
 			return nil, err
 		}
-		// Models not yet downloaded or ONNX tag not set — heuristic fallback.
-		// In production (make build), -tags onnx is always set; this path is
-		// reached only when models haven't been pulled yet.
 	} else {
 		textClient := onnxTextClient{backend: onnxBackend}
 		entityClient := onnxEntityClient{backend: onnxBackend}
@@ -64,11 +105,10 @@ func BuildService(lookupEnv EnvLookup) (*firequery.Service, error) {
 		similarityEngine = models.NewConfiguredE5SimilarityEngine(modelsConfig.SimilarityModelID, onnxBackend, nil)
 	}
 
-	mcpServer := fqmcp.NewServer()
-	p, err := pipeline.New(pipeline.Config{
+	return pipeline.New(pipeline.Config{
 		ExternalValidator:  validator.StrictValidator{},
 		InternalValidator:  validator.StrictValidator{},
-		FireMemoryClient:   validator.GuardedClient{Validator: validator.StrictValidator{}, Client: adapters.EngineClient{}},
+		FireMemoryClient:   client,
 		ContractBuilder:    builder.NewGoContractBuilder(builder.DefaultActorID),
 		IntentClassifier:   intentClassifier,
 		TriggerClassifier:  triggerClassifier,
@@ -77,20 +117,6 @@ func BuildService(lookupEnv EnvLookup) (*firequery.Service, error) {
 		RelationClassifier: models.HeuristicRelationClassifier{},
 		SimilarityEngine:   similarityEngine,
 		Reranker:           models.StableReranker{},
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	mcpServer.RegisterDefaultTools(func(ctx context.Context, request contract.ExternalRequest) (contract.ExternalResponse, error) {
-		return p.HandleMCP(ctx, request)
-	})
-
-	return firequery.New(firequery.Config{
-		Pipeline: p,
-		Runtime:  manager,
-		Doctor:   doctor.RuntimeReporter{Runtime: manager},
-		MCP:      mcpServer,
 	})
 }
 

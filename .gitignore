@@ -25,6 +25,8 @@ reports/
 
 # Go workspace
 vendor/
+# UI embedded JS vendor (not a Go vendor dir)
+!internal/ui/assets/vendor/
 
 # Models cache (downloaded at runtime)
 .cache/

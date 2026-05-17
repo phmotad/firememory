@@ -12,6 +12,7 @@ permissions:
 env:
   GO_VERSION: "1.24"
   ORT_VERSION: "1.20.0"
+  TOKENIZERS_VERSION: "1.27.0"
 
 jobs:
   # ── Linux: fmem (amd64+arm64) + fquery (amd64+arm64, CGO) ──────────────────
@@ -166,7 +167,7 @@ jobs:
           name: archives-darwin
           path: archives/
 
-  # ── Windows: fmem only (fquery requires WSL2 or Docker on Windows) ─────────
+  # ── Windows: fmem + fquery (CGO via MinGW + Rust libtokenizers) ─────────────
   build-windows:
     runs-on: windows-latest
     steps:
@@ -177,22 +178,62 @@ jobs:
           go-version: ${{ env.GO_VERSION }}
           cache: true
 
-      - name: Build fmem (windows/amd64)
-        shell: bash
+      - name: Add MinGW to PATH
+        shell: pwsh
         run: |
-          VERSION=${GITHUB_REF_NAME#v}
-          GOOS=windows GOARCH=amd64 CGO_ENABLED=0 \
-            go build \
-              -ldflags "-s -w -X github.com/phmotad/firememory/internal/version.Version=${VERSION}" \
-              -o bin/fmem.exe ./cmd/fmem
+          "C:\msys64\mingw64\bin" | Out-File -Append -Encoding utf8 $env:GITHUB_PATH
+
+      - name: Build libtokenizers (Windows, Rust + MinGW)
+        shell: pwsh
+        run: |
+          git clone --depth 1 --branch v${{ env.TOKENIZERS_VERSION }} `
+            https://github.com/daulet/tokenizers.git tokenizers-src
+
+          rustup target add x86_64-pc-windows-gnu
+
+          $env:CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER = "C:\msys64\mingw64\bin\gcc.exe"
+          Set-Location tokenizers-src
+          cargo build --release --target x86_64-pc-windows-gnu -p tokenizers
+          Set-Location ..
+
+          New-Item -ItemType Directory -Force -Path tokenizers-lib\windows-amd64 | Out-Null
+          Copy-Item `
+            tokenizers-src\target\x86_64-pc-windows-gnu\release\libtokenizers.a `
+            tokenizers-lib\windows-amd64\libtokenizers.a
+
+      - name: Download ORT (Windows)
+        shell: pwsh
+        run: .\scripts\download-ort.ps1
+        env:
+          ORT_VERSION: ${{ env.ORT_VERSION }}
+
+      - name: Build binaries
+        shell: pwsh
+        run: |
+          $VERSION = $env:GITHUB_REF_NAME -replace '^v', ''
+          $LDFLAGS  = "-s -w -X github.com/phmotad/firememory/internal/version.Version=$VERSION"
+          $Root     = (Get-Location).Path
+
+          New-Item -ItemType Directory -Force -Path bin | Out-Null
+
+          # fmem — no CGO
+          $env:GOOS = "windows"; $env:GOARCH = "amd64"; $env:CGO_ENABLED = "0"
+          go build -ldflags $LDFLAGS -o bin\fmem.exe .\cmd\fmem
+
+          # fquery — CGO via MinGW, libtokenizers linked statically
+          $env:CGO_ENABLED = "1"
+          $env:CC          = "C:\msys64\mingw64\bin\gcc.exe"
+          $env:CGO_LDFLAGS = "-L$Root\tokenizers-lib\windows-amd64 -static-libgcc -static-libstdc++ -static-libwinpthread"
+          go build -tags onnx -ldflags $LDFLAGS -o bin\fquery.exe .\cmd\fquery
 
       - name: Pack archive
         shell: pwsh
         run: |
           $VERSION = $env:GITHUB_REF_NAME -replace '^v', ''
-          $NAME = "firememory_${VERSION}_windows_amd64"
+          $NAME    = "firememory_${VERSION}_windows_amd64"
           New-Item -ItemType Directory -Force -Path "archives", "staging\$NAME" | Out-Null
-          Copy-Item bin\fmem.exe, LICENSE, README.md "staging\$NAME\"
+          Copy-Item bin\fmem.exe, bin\fquery.exe, ort-lib\onnxruntime.dll, `
+                    LICENSE, README.md "staging\$NAME\"
           Compress-Archive -Path "staging\$NAME" -DestinationPath "archives\${NAME}.zip"
 
       - uses: actions/upload-artifact@v4

@@ -24,7 +24,7 @@ Os modelos de ML (~325 MB) são baixados automaticamente no primeiro uso.
 curl -fsSL https://raw.githubusercontent.com/phmotad/firememory/main/scripts/install.sh | bash
 ```
 
-**Windows** (PowerShell) — instala `fmem`; `fquery` requer WSL2 ou Docker
+**Windows** (PowerShell)
 ```powershell
 irm https://raw.githubusercontent.com/phmotad/firememory/main/scripts/install.ps1 | iex
 ```
@@ -220,6 +220,30 @@ internal/
 
 Caminho rápido (`remember`): hash → embed → dedup → persist
 Caminho lento (`sync`): extrair entidades → construir relações → atualizar grafo
+
+---
+
+## Agent Skill
+
+Instale a skill `firememory-setup` para que seu agente de IA configure o FireMemory automaticamente em qualquer projeto.
+
+**macOS / Linux:**
+```sh
+curl -fsSL https://raw.githubusercontent.com/phmotad/firememory/main/scripts/install-skill.sh | bash
+```
+
+**Windows (PowerShell):**
+```powershell
+irm https://raw.githubusercontent.com/phmotad/firememory/main/scripts/install-skill.ps1 | iex
+```
+
+Depois, dentro de qualquer projeto no Claude Code (ou outro [agente compatível](https://agentskills.io)):
+
+```
+/firememory-setup
+```
+
+A skill verifica a instalação do FireMemory, cria um `.fbrain`, conecta o servidor MCP ao seu editor e ensina os três comandos que você vai usar no dia a dia.
 
 ---
 

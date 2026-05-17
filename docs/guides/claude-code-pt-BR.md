@@ -49,13 +49,13 @@ Adicione ao `~/.claude/settings.json`:
 }
 ```
 
-**Windows** (atenção: `fquery` requer WSL2 ou Docker no Windows)
+**Windows**
 ```json
 {
   "mcpServers": {
     "firequery": {
-      "command": "wsl",
-      "args": ["fquery", "mcp"]
+      "command": "fquery",
+      "args": ["mcp"]
     }
   }
 }

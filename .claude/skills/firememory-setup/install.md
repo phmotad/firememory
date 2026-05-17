@@ -2,11 +2,23 @@
 
 This skill guides you through setting up FireMemory in any project.
 
-## Install globally (available in all your projects)
+## Install in one command
+
+**macOS / Linux:**
+```sh
+curl -fsSL https://raw.githubusercontent.com/phmotad/firememory/main/scripts/install-skill.sh | bash
+```
+
+**Windows (PowerShell):**
+```powershell
+irm https://raw.githubusercontent.com/phmotad/firememory/main/scripts/install-skill.ps1 | iex
+```
+
+## Install manually (copy from this repo)
 
 ```sh
 mkdir -p ~/.claude/skills/firememory-setup
-cp SKILL.md ~/.claude/skills/firememory-setup/SKILL.md
+cp .claude/skills/firememory-setup/SKILL.md ~/.claude/skills/firememory-setup/SKILL.md
 ```
 
 Or clone the whole directory:

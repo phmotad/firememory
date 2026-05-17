@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FireMemory — Knowledge Graph</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="vendor/cytoscape.min.js"></script>
+</head>
+<body>
+  <div id="app">
+    <div id="graph-container">
+      <div id="cy"></div>
+      <div id="toolbar">
+        <span id="stats"></span>
+        <button id="btn-fit" title="Fit graph">&#x2B1C; Fit</button>
+        <button id="btn-layout" title="Re-run layout">&#x21BA; Layout</button>
+      </div>
+    </div>
+    <div id="panel" class="panel-empty">
+      <div id="panel-placeholder">
+        <p>Click a node to inspect it</p>
+      </div>
+      <div id="panel-content" hidden>
+        <div id="panel-header">
+          <span id="panel-kind-badge"></span>
+          <h2 id="panel-label"></h2>
+          <p id="panel-scope"></p>
+        </div>
+        <div id="panel-body">
+          <section id="panel-content-section" hidden>
+            <h3>Content</h3>
+            <p id="panel-content-text"></p>
+          </section>
+          <section id="panel-scores-section" hidden>
+            <h3>Scores</h3>
+            <div class="score-row">
+              <label>Importance</label>
+              <div class="score-bar-wrap">
+                <div class="score-bar" id="bar-importance"></div>
+              </div>
+              <span id="val-importance"></span>
+            </div>
+            <div class="score-row">
+              <label>Confidence</label>
+              <div class="score-bar-wrap">
+                <div class="score-bar" id="bar-confidence"></div>
+              </div>
+              <span id="val-confidence"></span>
+            </div>
+          </section>
+          <section id="panel-meta-section" hidden>
+            <h3>Metadata</h3>
+            <dl id="panel-meta-list"></dl>
+          </section>
+          <section id="panel-edges-section" hidden>
+            <h3>Connections</h3>
+            <ul id="panel-edges-list"></ul>
+          </section>
+          <section>
+            <h3>Timestamps</h3>
+            <p class="ts"><span>Created</span><span id="panel-created"></span></p>
+            <p class="ts"><span>Updated</span><span id="panel-updated"></span></p>
+            <p class="ts"><span>ID</span><span id="panel-id" class="mono"></span></p>
+          </section>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

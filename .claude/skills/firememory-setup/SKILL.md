@@ -15,7 +15,7 @@ Running diagnostics before guiding setup.
 ```!
 echo "=== FireMemory installation ==="
 fmem version 2>/dev/null && echo "STATUS: installed" || echo "STATUS: not installed"
-fquery version 2>/dev/null && echo "FQUERY: installed" || echo "FQUERY: not installed (Linux/macOS only; Windows requires WSL2 or Docker)"
+fquery version 2>/dev/null && echo "FQUERY: installed" || echo "FQUERY: not installed"
 echo ""
 echo "=== Current directory ==="
 pwd
@@ -49,7 +49,6 @@ curl -fsSL https://raw.githubusercontent.com/phmotad/firememory/main/scripts/ins
 **Windows (PowerShell):**
 ```powershell
 irm https://raw.githubusercontent.com/phmotad/firememory/main/scripts/install.ps1 | iex
-# Note: fquery (MCP server) requires WSL2 or Docker on Windows.
 ```
 
 **Homebrew:**
@@ -96,18 +95,17 @@ This writes the MCP server entry into the editor's config and prints the file it
 
 Ask the user to **fully restart** the editor (quit and reopen — not just reload).
 
-If `fquery` is not available (Windows without WSL2), show the manual JSON config:
+If `fquery init-mcp` fails, show the manual JSON config and point to `docs/guides/<editor>-en.md` (or `<editor>-pt-BR.md`) for details:
 ```json
 {
   "mcpServers": {
     "firequery": {
-      "command": "wsl",
-      "args": ["fquery", "mcp"]
+      "command": "fquery",
+      "args": ["mcp"]
     }
   }
 }
 ```
-And point them to `docs/guides/<editor>-en.md` (or `<editor>-pt-BR.md`) for details.
 
 ---
 

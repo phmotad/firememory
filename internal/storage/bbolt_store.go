@@ -1,7 +1,6 @@
 package storage
 
 import (
-	"errors"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -12,15 +11,16 @@ import (
 	"os"
 )
 
-const defaultBoltTimeout = time.Second
+// boltOpenTimeout is the maximum time to wait for bbolt's OS-level file lock.
+// The daemon architecture serialises writes through a single process, so
+// contention only occurs briefly during daemon startup/shutdown transitions.
+const boltOpenTimeout = 5 * time.Second
 
 type BboltStore struct {
-	mu       sync.RWMutex
-	db       *bolt.DB
-	path     string
-	lockPath string
-	lockFile *os.File
-	closed   bool
+	mu     sync.RWMutex
+	db     *bolt.DB
+	path   string
+	closed bool
 }
 
 func OpenBboltStore(path string) (*BboltStore, error) {
@@ -35,23 +35,14 @@ func OpenBboltStore(path string) (*BboltStore, error) {
 		}
 	}
 
-	lockPath := path + ".lock"
-	lockFile, err := acquireLockFile(lockPath)
+	db, err := bolt.Open(path, 0o600, &bolt.Options{Timeout: boltOpenTimeout})
 	if err != nil {
-		return nil, err
-	}
-
-	db, err := bolt.Open(path, 0o600, &bolt.Options{Timeout: defaultBoltTimeout})
-	if err != nil {
-		_ = releaseLockFile(lockFile, lockPath)
 		return nil, err
 	}
 
 	return &BboltStore{
-		db:       db,
-		path:     path,
-		lockPath: lockPath,
-		lockFile: lockFile,
+		db:   db,
+		path: path,
 	}, nil
 }
 
@@ -198,7 +189,7 @@ func (s *BboltStore) Compact() error {
 	_ = os.Remove(tempPath)
 	_ = os.Remove(backupPath)
 
-	tempDB, err := bolt.Open(tempPath, 0o600, &bolt.Options{Timeout: defaultBoltTimeout})
+	tempDB, err := bolt.Open(tempPath, 0o600, &bolt.Options{Timeout: boltOpenTimeout})
 	if err != nil {
 		return err
 	}
@@ -237,7 +228,7 @@ func (s *BboltStore) Compact() error {
 		return err
 	}
 
-	reopened, err := bolt.Open(s.path, 0o600, &bolt.Options{Timeout: defaultBoltTimeout})
+	reopened, err := bolt.Open(s.path, 0o600, &bolt.Options{Timeout: boltOpenTimeout})
 	if err != nil {
 		return err
 	}
@@ -257,12 +248,7 @@ func (s *BboltStore) Close() error {
 	}
 
 	s.closed = true
-	closeErr := s.db.Close()
-	lockErr := releaseLockFile(s.lockFile, s.lockPath)
-	if closeErr != nil {
-		return closeErr
-	}
-	return lockErr
+	return s.db.Close()
 }
 
 type boltTx struct {
@@ -387,28 +373,3 @@ func (tx *boltTx) List(namespace, prefix string, limit int) ([]Record, error) {
 	return records, nil
 }
 
-func acquireLockFile(path string) (*os.File, error) {
-	file, err := os.OpenFile(path, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0o600)
-	if err != nil {
-		if errors.Is(err, os.ErrExist) {
-			return nil, ErrStoreLocked
-		}
-		return nil, err
-	}
-	return file, nil
-}
-
-func releaseLockFile(file *os.File, path string) error {
-	if file != nil {
-		if err := file.Close(); err != nil {
-			return err
-		}
-	}
-	if strings.TrimSpace(path) == "" {
-		return nil
-	}
-	if err := os.Remove(path); err != nil && !errors.Is(err, os.ErrNotExist) {
-		return err
-	}
-	return nil
-}

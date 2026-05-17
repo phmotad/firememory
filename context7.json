@@ -1,0 +1,19 @@
+{
+  "title": "FireMemory",
+  "description": "Local semantic memory for AI coding agents. Persistent, private, no GPU required. Includes fmem CLI and FireQuery MCP server.",
+  "version": "0.1.0",
+  "include": [
+    "README.md",
+    "README_pt-BR.md",
+    "AGENTS.md",
+    "docs/**",
+    "examples/**",
+    ".claude/skills/**"
+  ],
+  "exclude": [
+    "**/*_test.go",
+    "scripts/**",
+    "vendor/**",
+    "**/.DS_Store"
+  ]
+}
