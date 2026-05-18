@@ -8,8 +8,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/phmotad/firememory/internal/storage"
 	bolt "go.etcd.io/bbolt"
+
+	"github.com/phmotad/firememory/internal/storage"
 )
 
 func TestValidatePathRequiresFbrainExtension(t *testing.T) {

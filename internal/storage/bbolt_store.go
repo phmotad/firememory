@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"os"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -8,7 +9,6 @@ import (
 	"time"
 
 	bolt "go.etcd.io/bbolt"
-	"os"
 )
 
 // boltOpenTimeout is the maximum time to wait for bbolt's OS-level file lock.
@@ -372,4 +372,3 @@ func (tx *boltTx) List(namespace, prefix string, limit int) ([]Record, error) {
 
 	return records, nil
 }
-

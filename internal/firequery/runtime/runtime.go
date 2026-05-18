@@ -30,17 +30,17 @@ const (
 )
 
 var (
-	ErrNoAvailableBackend     = errors.New("firequery/runtime: no available backend")
-	ErrGPUNotAvailable        = errors.New("firequery/runtime: gpu backend not available")
-	ErrModelNotRegistered     = errors.New("firequery/runtime: model is not registered")
-	ErrMemoryBudgetExceeded   = errors.New("firequery/runtime: memory budget exceeded")
-	ErrLoaderRequired         = errors.New("firequery/runtime: loader is required")
-	ErrModelIDRequired        = errors.New("firequery/runtime: model id is required")
-	ErrModelVersionRequired   = errors.New("firequery/runtime: model version is required")
-	ErrNoSupportedBackends    = errors.New("firequery/runtime: model must support at least one backend")
-	ErrSelectorRequired       = errors.New("firequery/runtime: selector is required")
-	ErrDetectorRequired       = errors.New("firequery/runtime: detector is required")
-	ErrRegistryRequired       = errors.New("firequery/runtime: registry is required")
+	ErrNoAvailableBackend   = errors.New("firequery/runtime: no available backend")
+	ErrGPUNotAvailable      = errors.New("firequery/runtime: gpu backend not available")
+	ErrModelNotRegistered   = errors.New("firequery/runtime: model is not registered")
+	ErrMemoryBudgetExceeded = errors.New("firequery/runtime: memory budget exceeded")
+	ErrLoaderRequired       = errors.New("firequery/runtime: loader is required")
+	ErrModelIDRequired      = errors.New("firequery/runtime: model id is required")
+	ErrModelVersionRequired = errors.New("firequery/runtime: model version is required")
+	ErrNoSupportedBackends  = errors.New("firequery/runtime: model must support at least one backend")
+	ErrSelectorRequired     = errors.New("firequery/runtime: selector is required")
+	ErrDetectorRequired     = errors.New("firequery/runtime: detector is required")
+	ErrRegistryRequired     = errors.New("firequery/runtime: registry is required")
 )
 
 type Device struct {
