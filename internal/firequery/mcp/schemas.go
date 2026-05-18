@@ -1,15 +1,15 @@
 package mcp
 
 type ToolSchema struct {
-	Name        string         `json:"name"`
-	Description string         `json:"description"`
-	Input       SchemaObject   `json:"input"`
-	Output      SchemaObject   `json:"output"`
+	Name        string       `json:"name"`
+	Description string       `json:"description"`
+	Input       SchemaObject `json:"input"`
+	Output      SchemaObject `json:"output"`
 }
 
 type SchemaObject struct {
-	Required []string                 `json:"required,omitempty"`
-	Fields   map[string]SchemaField   `json:"fields"`
+	Required []string               `json:"required,omitempty"`
+	Fields   map[string]SchemaField `json:"fields"`
 }
 
 type SchemaField struct {

@@ -30,3 +30,6 @@ issues:
       linters:
         - unparam
         - errcheck
+    - path: "robust_report_test\\.go"
+      linters:
+        - misspell

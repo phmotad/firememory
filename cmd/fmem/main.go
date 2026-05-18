@@ -204,11 +204,11 @@ func runSync(args []string, stdout io.Writer, jsonOutput bool) error {
 
 	if jsonOutput {
 		return util.WriteJSON(stdout, map[string]any{
-			"ok":        true,
-			"operation": "sync",
-			"processed": result.Processed,
+			"ok":         true,
+			"operation":  "sync",
+			"processed":  result.Processed,
 			"synced_ids": result.SyncedIDs,
-			"trace":     util.StructuredTrace("firememory.engine", result.Trace),
+			"trace":      util.StructuredTrace("firememory.engine", result.Trace),
 		})
 	}
 

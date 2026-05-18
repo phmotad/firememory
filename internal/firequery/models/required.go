@@ -158,7 +158,7 @@ func (e GLiNEREntityExtractor) ExtractEntities(ctx context.Context, input TextIn
 type E5SimilarityEngine struct {
 	Embedder QueryPassageEmbedder
 	Fallback SimilarityEngine
-	modelID   string
+	modelID  string
 }
 
 func NewE5SimilarityEngine(embedder QueryPassageEmbedder, fallback SimilarityEngine) E5SimilarityEngine {
@@ -172,11 +172,13 @@ func NewConfiguredE5SimilarityEngine(modelID string, embedder QueryPassageEmbedd
 	return E5SimilarityEngine{
 		Embedder: embedder,
 		Fallback: fallback,
-		modelID:   configuredModelID(modelID, SimilarityModelE5Small),
+		modelID:  configuredModelID(modelID, SimilarityModelE5Small),
 	}
 }
 
-func (e E5SimilarityEngine) ModelID() string { return configuredModelID(e.modelID, SimilarityModelE5Small) }
+func (e E5SimilarityEngine) ModelID() string {
+	return configuredModelID(e.modelID, SimilarityModelE5Small)
+}
 
 func (e E5SimilarityEngine) ScoreCandidates(ctx context.Context, input TextInput, candidates []Candidate) ([]Candidate, error) {
 	if e.Embedder == nil {

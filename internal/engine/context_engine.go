@@ -7,7 +7,6 @@ import (
 
 	fmcontext "github.com/phmotad/firememory/internal/context"
 	"github.com/phmotad/firememory/internal/memory"
-	"github.com/phmotad/firememory/internal/storage"
 )
 
 func (e *Base) Context(input ContextInput) (ContextResult, error) {
@@ -37,11 +36,7 @@ func (e *Base) Context(input ContextInput) (ContextResult, error) {
 	}
 
 	if input.IncludeGraph {
-		expanded, err := e.expandGraphMemories(memories)
-		if err != nil {
-			return ContextResult{}, err
-		}
-		memories = mergeMemories(memories, expanded)
+		memories = mergeMemories(memories, e.expandGraphMemories(memories))
 		trace = append(trace, "expanded graph neighborhood")
 	}
 
@@ -96,7 +91,7 @@ func orderedUniqueMemories(hits []RecallHit) []memory.Memory {
 	return memories
 }
 
-func (e *Base) expandGraphMemories(seed []memory.Memory) ([]memory.Memory, error) {
+func (e *Base) expandGraphMemories(seed []memory.Memory) []memory.Memory {
 	expanded := make([]memory.Memory, 0)
 	seen := map[string]struct{}{}
 	for _, mem := range seed {
@@ -106,10 +101,6 @@ func (e *Base) expandGraphMemories(seed []memory.Memory) ([]memory.Memory, error
 	for _, mem := range seed {
 		neighbors, err := e.Graph().Related(mem.ID, 1)
 		if err != nil {
-			if err == storage.ErrNotFound {
-				continue
-			}
-			// graph package returns its own ErrNodeNotFound; ignore missing nodes.
 			continue
 		}
 
@@ -120,9 +111,6 @@ func (e *Base) expandGraphMemories(seed []memory.Memory) ([]memory.Memory, error
 
 			relatedMemory, err := e.loadMemory(node.ID)
 			if err != nil {
-				if err == storage.ErrNotFound {
-					continue
-				}
 				continue
 			}
 
@@ -131,7 +119,7 @@ func (e *Base) expandGraphMemories(seed []memory.Memory) ([]memory.Memory, error
 		}
 	}
 
-	return expanded, nil
+	return expanded
 }
 
 func mergeMemories(primary, extra []memory.Memory) []memory.Memory {

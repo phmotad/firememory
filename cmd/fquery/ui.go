@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
 	"os/signal"
+	"runtime"
 	"strconv"
 	"syscall"
 
@@ -45,7 +47,21 @@ func runUI(args []string, stdout, stderr io.Writer) error {
 	fmt.Fprintf(stdout, "Brain: %s\n", brainPath)
 	fmt.Fprintf(stderr, "Press Ctrl+C to stop.\n")
 
+	openBrowser(url)
 	return srv.Start(ctx)
+}
+
+func openBrowser(url string) {
+	var cmd *exec.Cmd
+	switch runtime.GOOS {
+	case "windows":
+		cmd = exec.Command("rundll32", "url.dll,FileProtocolHandler", url)
+	case "darwin":
+		cmd = exec.Command("open", url)
+	default:
+		cmd = exec.Command("xdg-open", url)
+	}
+	_ = cmd.Start()
 }
 
 func parseUIArgs(args []string) (brainPath string, port int, err error) {

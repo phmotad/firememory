@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"sort"
 	"strings"
-
-	"github.com/phmotad/firememory/internal/storage"
 )
 
 func (e *Base) Explain(input ExplainInput) (ExplainResult, error) {
@@ -115,6 +113,3 @@ func uniqueTrace(trace []string) []string {
 	return out
 }
 
-func isMissingTrace(err error) bool {
-	return err == storage.ErrNotFound
-}

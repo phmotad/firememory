@@ -171,10 +171,10 @@ func runModelsList(stdout io.Writer, cacheDir string, jsonOutput bool) error {
 	}
 	if jsonOutput {
 		return util.WriteJSON(stdout, map[string]any{
-			"ok":       true,
-			"command":  "models list",
-			"cache":    cacheDir,
-			"models":   statuses,
+			"ok":      true,
+			"command": "models list",
+			"cache":   cacheDir,
+			"models":  statuses,
 		})
 	}
 	fmt.Fprintf(stdout, "cache: %s\n\n", cacheDir)
@@ -194,7 +194,7 @@ func runModelsList(stdout io.Writer, cacheDir string, jsonOutput bool) error {
 	return nil
 }
 
-func runModelsPull(stdout, stderr io.Writer, cacheDir string, force bool) error {
+func runModelsPull(stdout, _ io.Writer, cacheDir string, force bool) error {
 	if force {
 		return modelcache.PullAll(context.Background(), cacheDir, stdout)
 	}
@@ -367,15 +367,6 @@ func writeUsage(w io.Writer) {
 	fmt.Fprintln(w, "  FIREQUERY_ENABLE_DIRECTML=1")
 	fmt.Fprintln(w, "  FIREQUERY_ENABLE_COREML=1")
 	fmt.Fprintln(w, "  FIREQUERY_ENABLE_OPENVINO=1")
-}
-
-func containsLine(output, want string) bool {
-	for _, line := range strings.Split(output, "\n") {
-		if strings.Contains(line, want) {
-			return true
-		}
-	}
-	return false
 }
 
 func writeError(w io.Writer, err error, jsonOutput bool) {

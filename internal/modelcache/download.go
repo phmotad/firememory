@@ -11,9 +11,9 @@ import (
 )
 
 const (
-	downloadTimeout  = 30 * time.Minute
-	userAgent        = "firememory-modelcache/1"
-	tempSuffix       = ".download"
+	downloadTimeout = 30 * time.Minute
+	userAgent       = "firememory-modelcache/1"
+	tempSuffix      = ".download"
 )
 
 // downloadFile fetches url into destPath with resume support.
@@ -61,8 +61,7 @@ func fetchWithResume(ctx context.Context, url, destPath string, offset, totalByt
 	defer resp.Body.Close()
 
 	if resp.StatusCode == http.StatusRequestedRangeNotSatisfiable {
-		// Server doesn't support resume or file is fully downloaded.
-		offset = 0
+		// Server doesn't support resume; restart from scratch.
 		resp.Body.Close()
 		req2, _ := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 		req2.Header.Set("User-Agent", userAgent)
@@ -71,7 +70,7 @@ func fetchWithResume(ctx context.Context, url, destPath string, offset, totalByt
 			return fmt.Errorf("retry GET %s: %w", shortenURL(url), err)
 		}
 		defer resp2.Body.Close()
-		return writeWithProgress(resp2.Body, destPath, 0, totalBytes, w)
+		return writeWithProgress(resp2.Body, destPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0, totalBytes, w)
 	}
 
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusPartialContent {
@@ -86,22 +85,22 @@ func fetchWithResume(ctx context.Context, url, destPath string, offset, totalByt
 		offset = 0
 	}
 
-	return writeWithProgress(resp.Body, destPath, offset, totalBytes, w)
+	return writeWithProgress(resp.Body, destPath, flags, offset, totalBytes, w)
 }
 
-func writeWithProgress(body io.Reader, destPath string, alreadyBytes, totalBytes int64, w io.Writer) error {
-	f, err := os.OpenFile(destPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o644)
+func writeWithProgress(body io.Reader, destPath string, flags int, alreadyBytes, totalBytes int64, w io.Writer) error {
+	f, err := os.OpenFile(destPath, flags, 0o644)
 	if err != nil {
 		return fmt.Errorf("open dest: %w", err)
 	}
 	defer f.Close()
 
 	pr := &progressReader{
-		r:     body,
+		r:       body,
 		written: alreadyBytes,
-		total:  totalBytes,
-		w:      w,
-		last:   time.Now(),
+		total:   totalBytes,
+		w:       w,
+		last:    time.Now(),
 	}
 	_, err = io.Copy(f, pr)
 	if w != nil {

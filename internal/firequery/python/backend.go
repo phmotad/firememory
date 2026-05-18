@@ -18,12 +18,12 @@ import (
 )
 
 var (
-	ErrPythonUnavailable   = errors.New("firequery/python: python backend is unavailable")
-	ErrRunnerStartFailed   = errors.New("firequery/python: failed to start runner")
-	ErrRunnerProtocol      = errors.New("firequery/python: invalid runner response")
-	ErrRunnerHealthFailed  = errors.New("firequery/python: runner healthcheck failed")
-	ErrBackendClosed       = errors.New("firequery/python: backend is closed")
-	ErrDimensionNotFound   = errors.New("firequery/python: model dimension not available")
+	ErrPythonUnavailable  = errors.New("firequery/python: python backend is unavailable")
+	ErrRunnerStartFailed  = errors.New("firequery/python: failed to start runner")
+	ErrRunnerProtocol     = errors.New("firequery/python: invalid runner response")
+	ErrRunnerHealthFailed = errors.New("firequery/python: runner healthcheck failed")
+	ErrBackendClosed      = errors.New("firequery/python: backend is closed")
+	ErrDimensionNotFound  = errors.New("firequery/python: model dimension not available")
 )
 
 //go:embed runner.py
@@ -62,13 +62,13 @@ type request struct {
 }
 
 type response struct {
-	OK        bool             `json:"ok"`
-	Error     string           `json:"error,omitempty"`
-	Device    string           `json:"device,omitempty"`
-	Dimension int              `json:"dimension,omitempty"`
+	OK        bool                 `json:"ok"`
+	Error     string               `json:"error,omitempty"`
+	Device    string               `json:"device,omitempty"`
+	Dimension int                  `json:"dimension,omitempty"`
 	Labels    []models.ScoredLabel `json:"labels,omitempty"`
-	Entities  []models.Entity  `json:"entities,omitempty"`
-	Vectors   [][]float32      `json:"vectors,omitempty"`
+	Entities  []models.Entity      `json:"entities,omitempty"`
+	Vectors   [][]float32          `json:"vectors,omitempty"`
 }
 
 func DetectAvailability(ctx context.Context, options Options) Availability {
@@ -289,8 +289,8 @@ func (c EntityExtractionClient) ExtractEntities(ctx context.Context, modelID str
 }
 
 type QueryPassageEmbedder struct {
-	Backend   *Backend
-	ModelID   string
+	Backend        *Backend
+	ModelID        string
 	DimensionValue int
 }
 
@@ -300,8 +300,8 @@ func NewQueryPassageEmbedder(ctx context.Context, backend *Backend, modelID stri
 		return nil, err
 	}
 	return &QueryPassageEmbedder{
-		Backend:   backend,
-		ModelID:   modelID,
+		Backend:        backend,
+		ModelID:        modelID,
 		DimensionValue: dimension,
 	}, nil
 }

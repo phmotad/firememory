@@ -50,12 +50,12 @@ func callRemember(eng engine.Engine, request contract.OperationRequest) (contrac
 		RequestID: request.RequestID,
 		Operation: request.Operation,
 		Data: map[string]any{
-			"memory_id":             result.Memory.ID,
-			"dedup_action":          result.DedupAction,
-			"reinforced_memory_id":  result.ReinforcedMemoryID,
-			"status":                result.Memory.Status,
-			"normalized_content":    result.Memory.NormalizedContent,
-			"memory_scope":          result.Memory.Scope,
+			"memory_id":            result.Memory.ID,
+			"dedup_action":         result.DedupAction,
+			"reinforced_memory_id": result.ReinforcedMemoryID,
+			"status":               result.Memory.Status,
+			"normalized_content":   result.Memory.NormalizedContent,
+			"memory_scope":         result.Memory.Scope,
 		},
 		Trace: map[string]any{
 			"firememory": util.StructuredTrace("firememory.engine", result.Trace),

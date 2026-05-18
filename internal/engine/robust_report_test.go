@@ -60,7 +60,6 @@ func TestRobustMemoryFlowGeneratesMarkdownReport(t *testing.T) {
 	fmt.Fprintf(&report, "| # | Content | Action | Memory ID |\n")
 	fmt.Fprintf(&report, "|---|---------|--------|-----------|\n")
 
-	var rememberedIDs []string
 	for index, content := range memories {
 		result, err := engine.Remember(RememberInput{
 			BrainPath: engine.Path(),
@@ -71,7 +70,6 @@ func TestRobustMemoryFlowGeneratesMarkdownReport(t *testing.T) {
 			_ = engine.Close()
 			t.Fatalf("remember %d: %v", index+1, err)
 		}
-		rememberedIDs = append(rememberedIDs, result.Memory.ID)
 		fmt.Fprintf(&report, "| %d | %s | `%s` | `%s` |\n", index+1, escapeTable(content), result.DedupAction, result.Memory.ID)
 	}
 

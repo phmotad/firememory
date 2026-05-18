@@ -1,8 +1,8 @@
 package brainfile
 
 import (
-	"errors"
 	"encoding/json"
+	"errors"
 	"os"
 	"path/filepath"
 	"testing"

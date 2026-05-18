@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	ErrNotAvailable = errors.New("onnx: backend not available (rebuild with -tags onnx)")
+	ErrNotAvailable  = errors.New("onnx: backend not available (rebuild with -tags onnx)")
 	ErrModelNotFound = errors.New("onnx: model files not found (run: fquery models pull)")
 )
 
