@@ -11,7 +11,7 @@ permissions:
 
 env:
   GO_VERSION: "1.24"
-  ORT_VERSION: "1.22.0"
+  ORT_VERSION: "1.25.0"
   TOKENIZERS_VERSION: "1.27.0"
 
 jobs:
@@ -94,7 +94,10 @@ jobs:
           name: archives-linux
           path: archives/
 
-  # ── macOS: fmem (arm64+amd64) + fquery (arm64+amd64, CGO) ─────────────────
+  # ── macOS: fmem (arm64) + fquery (arm64, CGO) ──────────────────────────────
+  # ORT ≥ 1.25.0 dropped Intel Mac (osx-x86_64 / osx-universal2) builds.
+  # Only darwin/arm64 (Apple Silicon) is shipped; Intel Mac users can use Rosetta 2
+  # to run the arm64 binary, or build from source with an older ORT.
   build-darwin:
     runs-on: macos-latest
     steps:
@@ -105,13 +108,7 @@ jobs:
           go-version: ${{ env.GO_VERSION }}
           cache: true
 
-      - name: Set up clang wrapper for darwin/amd64
-        run: |
-          printf '#!/bin/sh\nexec clang -arch x86_64 "$@"\n' \
-            > /usr/local/bin/cc-x86_64
-          chmod +x /usr/local/bin/cc-x86_64
-
-      - name: Download ORT (darwin)
+      - name: Download ORT (darwin arm64)
         run: bash scripts/download-ort.sh
         env:
           ORT_VERSION: ${{ env.ORT_VERSION }}
@@ -124,43 +121,31 @@ jobs:
           VERSION=${GITHUB_REF_NAME#v}
           LDFLAGS="-s -w -X github.com/phmotad/firememory/internal/version.Version=${VERSION}"
 
-          mkdir -p bin/darwin_arm64 bin/darwin_amd64
+          mkdir -p bin/darwin_arm64
 
           # fmem — no CGO
           GOOS=darwin GOARCH=arm64 CGO_ENABLED=0 \
             go build -ldflags "${LDFLAGS}" -o bin/darwin_arm64/fmem ./cmd/fmem
-          GOOS=darwin GOARCH=amd64 CGO_ENABLED=0 \
-            go build -ldflags "${LDFLAGS}" -o bin/darwin_amd64/fmem ./cmd/fmem
 
-          # fquery darwin/arm64 — CGO, native M1
+          # fquery darwin/arm64 — CGO, native M1/M2/M3
           CGO_ENABLED=1 \
             CGO_LDFLAGS="-L$(pwd)/tokenizers-lib/darwin-arm64" \
             GOOS=darwin GOARCH=arm64 \
             go build -tags onnx -ldflags "${LDFLAGS}" \
               -o bin/darwin_arm64/fquery ./cmd/fquery
 
-          # fquery darwin/amd64 — CGO, clang -arch x86_64
-          CGO_ENABLED=1 \
-            CC=/usr/local/bin/cc-x86_64 \
-            CGO_LDFLAGS="-L$(pwd)/tokenizers-lib/darwin-amd64" \
-            GOOS=darwin GOARCH=amd64 \
-            go build -tags onnx -ldflags "${LDFLAGS}" \
-              -o bin/darwin_amd64/fquery ./cmd/fquery
-
       - name: Pack archives
         run: |
           VERSION=${GITHUB_REF_NAME#v}
           mkdir -p archives
 
-          for ARCH in arm64 amd64; do
-            NAME="firememory_${VERSION}_darwin_${ARCH}"
-            mkdir -p "staging/${NAME}"
-            cp bin/darwin_${ARCH}/fmem   "staging/${NAME}/"
-            cp bin/darwin_${ARCH}/fquery "staging/${NAME}/"
-            cp ort-lib/darwin/libonnxruntime.dylib "staging/${NAME}/"
-            cp LICENSE README.md "staging/${NAME}/"
-            tar -czf "archives/${NAME}.tar.gz" -C staging "${NAME}"
-          done
+          NAME="firememory_${VERSION}_darwin_arm64"
+          mkdir -p "staging/${NAME}"
+          cp bin/darwin_arm64/fmem   "staging/${NAME}/"
+          cp bin/darwin_arm64/fquery "staging/${NAME}/"
+          cp ort-lib/darwin/libonnxruntime.dylib "staging/${NAME}/"
+          cp LICENSE README.md "staging/${NAME}/"
+          tar -czf "archives/${NAME}.tar.gz" -C staging "${NAME}"
 
       - uses: actions/upload-artifact@v4
         with:

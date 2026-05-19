@@ -3,7 +3,7 @@
 # Output goes into ort-lib/<os>/ so goreleaser can template ort-lib/{{ .Os }}/*.
 set -euo pipefail
 
-ORT_VERSION="${ORT_VERSION:-1.22.0}"
+ORT_VERSION="${ORT_VERSION:-1.25.0}"
 BASE="https://github.com/microsoft/onnxruntime/releases/download/v${ORT_VERSION}"
 
 OS="$(uname -s)"
@@ -30,13 +30,13 @@ case "${OS}" in
   Darwin)
     DEST="ort-lib/darwin"
     mkdir -p "${DEST}"
-    FILE="onnxruntime-osx-universal2-${ORT_VERSION}.tgz"
+    FILE="onnxruntime-osx-arm64-${ORT_VERSION}.tgz"
     echo "Downloading ${FILE}..."
     curl -fsSL "${BASE}/${FILE}" \
-      | tar -xz -C /tmp "onnxruntime-osx-universal2-${ORT_VERSION}/lib/libonnxruntime.${ORT_VERSION}.dylib"
-    cp "/tmp/onnxruntime-osx-universal2-${ORT_VERSION}/lib/libonnxruntime.${ORT_VERSION}.dylib" \
+      | tar -xz -C /tmp "onnxruntime-osx-arm64-${ORT_VERSION}/lib/libonnxruntime.${ORT_VERSION}.dylib"
+    cp "/tmp/onnxruntime-osx-arm64-${ORT_VERSION}/lib/libonnxruntime.${ORT_VERSION}.dylib" \
        "${DEST}/libonnxruntime.dylib"
-    rm -rf "/tmp/onnxruntime-osx-universal2-${ORT_VERSION}"
+    rm -rf "/tmp/onnxruntime-osx-arm64-${ORT_VERSION}"
     ;;
 
   *)

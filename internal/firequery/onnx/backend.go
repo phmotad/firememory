@@ -59,11 +59,12 @@ func New(modelsDir string) (Backend, error) {
 		return nil, fmt.Errorf("onnx: load DeBERTa encoder: %w", err)
 	}
 
-	// GLiNER requires ORT Custom Op API ≥ v25 (ORT ≥ 1.25.0).
-	// On older runtimes it fails to load; we continue without it so that
-	// DeBERTa and E5 remain active and the pipeline's heuristic fallback
-	// handles entity extraction instead.
-	gliner, _ := newGLiNER(glinerDir, EntityLabels)
+	gliner, err := newGLiNER(glinerDir, EntityLabels)
+	if err != nil {
+		_ = e5enc.Close()
+		_ = classEnc.Close()
+		return nil, fmt.Errorf("onnx: load GLiNER: %w", err)
+	}
 
 	return &onnxBackend{
 		e5enc:             e5enc,
@@ -83,10 +84,8 @@ func (b *onnxBackend) Close() error {
 	if err := b.classEnc.Close(); err != nil {
 		errs = append(errs, err)
 	}
-	if b.gliner != nil {
-		if err := b.gliner.Close(); err != nil {
-			errs = append(errs, err)
-		}
+	if err := b.gliner.Close(); err != nil {
+		errs = append(errs, err)
 	}
 	if len(errs) > 0 {
 		return fmt.Errorf("onnx: close: %v", errs)
@@ -115,12 +114,7 @@ func (b *onnxBackend) Classify(ctx context.Context, modelID string, input models
 }
 
 // ExtractEntities implements models.EntityExtractionClient using GLiNER.
-// Returns ErrNotAvailable when GLiNER failed to load (older ORT runtime);
-// the pipeline's GLiNEREntityExtractor will use its heuristic fallback.
 func (b *onnxBackend) ExtractEntities(ctx context.Context, modelID string, input models.TextInput) ([]models.Entity, error) {
-	if b.gliner == nil {
-		return nil, ErrNotAvailable
-	}
 	return b.gliner.ExtractEntities(ctx, modelID, input)
 }
 
