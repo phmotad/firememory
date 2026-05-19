@@ -178,10 +178,13 @@ jobs:
           go-version: ${{ env.GO_VERSION }}
           cache: true
 
-      - name: Add MinGW to PATH
-        shell: pwsh
-        run: |
-          "C:\msys64\mingw64\bin" | Out-File -Append -Encoding utf8 $env:GITHUB_PATH
+      - name: Install MinGW64 via MSYS2
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          install: mingw-w64-x86_64-gcc
+          update: false
+          path-type: inherit
 
       - name: Build libtokenizers (Windows, Rust + MinGW)
         shell: pwsh
@@ -191,20 +194,23 @@ jobs:
 
           rustup target add x86_64-pc-windows-gnu
 
+          # tokenizers-ffi is the CGO-compatible FFI crate inside the workspace
           $env:CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER = "C:\msys64\mingw64\bin\gcc.exe"
           Set-Location tokenizers-src
-          cargo build --release --target x86_64-pc-windows-gnu
+          cargo build --release --target x86_64-pc-windows-gnu -p tokenizers-ffi
           Set-Location ..
 
-          # Locate the produced static lib regardless of exact workspace path
-          $lib = Get-ChildItem -Path tokenizers-src\target -Recurse -Filter "libtokenizers.a" |
-                   Where-Object { $_.FullName -like "*x86_64-pc-windows-gnu*release*" } |
+          # Locate the static lib (name may vary by crate version)
+          $lib = Get-ChildItem -Path tokenizers-src\target -Recurse -Filter "*.a" |
+                   Where-Object { $_.FullName -like "*x86_64-pc-windows-gnu*release*" -and
+                                  $_.Name -notlike "*deps*" } |
                    Select-Object -First 1
           if (-not $lib) {
-            Write-Error "libtokenizers.a not found. Files in target:"
-            Get-ChildItem -Path tokenizers-src\target -Recurse -Filter "*.a" | ForEach-Object { $_.FullName }
+            Write-Error "No .a file found. Contents of target/x86_64-pc-windows-gnu/release:"
+            Get-ChildItem tokenizers-src\target\x86_64-pc-windows-gnu\release -ErrorAction SilentlyContinue
             exit 1
           }
+          Write-Host "Using library: $($lib.FullName)"
           New-Item -ItemType Directory -Force -Path tokenizers-lib\windows-amd64 | Out-Null
           Copy-Item $lib.FullName tokenizers-lib\windows-amd64\libtokenizers.a
 
