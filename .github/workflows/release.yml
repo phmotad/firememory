@@ -194,8 +194,9 @@ jobs:
 
           rustup target add x86_64-pc-windows-gnu
 
-          # tokenizers-ffi is the CGO-compatible FFI crate inside the workspace
-          $gcc = (Get-Command gcc -ErrorAction Stop).Source
+          # Ensure MSYS2 MINGW64 gcc takes precedence over C:\mingw64 (Win32-threads)
+          $env:PATH = "C:\msys64\mingw64\bin;$env:PATH"
+          $gcc = "C:\msys64\mingw64\bin\gcc.exe"
           Write-Host "gcc: $gcc"
           $env:CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER = $gcc
           Set-Location tokenizers-src
@@ -235,9 +236,10 @@ jobs:
           $env:GOOS = "windows"; $env:GOARCH = "amd64"; $env:CGO_ENABLED = "0"
           go build -ldflags $LDFLAGS -o bin\fmem.exe .\cmd\fmem
 
-          # fquery — CGO via MinGW, libtokenizers linked statically
+          # fquery — CGO via MSYS2 MINGW64 (POSIX-threads, supports -static-libwinpthread)
           $env:CGO_ENABLED = "1"
-          $env:CC          = (Get-Command gcc -ErrorAction Stop).Source
+          $env:PATH        = "C:\msys64\mingw64\bin;$env:PATH"
+          $env:CC          = "C:\msys64\mingw64\bin\gcc.exe"
           $env:CGO_LDFLAGS = "-L$Root\tokenizers-lib\windows-amd64 -static-libgcc -static-libstdc++ -static-libwinpthread"
           go build -tags onnx -ldflags $LDFLAGS -o bin\fquery.exe .\cmd\fquery
 
