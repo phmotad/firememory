@@ -230,7 +230,7 @@ jobs:
           # -static-libwinpthread is omitted: Win32-threads MinGW has no libwinpthread
           $env:CGO_ENABLED = "1"
           $env:CC          = "C:\mingw64\bin\gcc.exe"
-          $env:CGO_LDFLAGS = "-L$Root\tokenizers-lib\windows-amd64 -static-libgcc -static-libstdc++"
+          $env:CGO_LDFLAGS = "-L$Root\tokenizers-lib\windows-amd64 -static-libgcc -static-libstdc++ -lntdll"
           go build -tags onnx -ldflags $LDFLAGS -o bin\fquery.exe .\cmd\fquery
 
       - name: Pack archive
