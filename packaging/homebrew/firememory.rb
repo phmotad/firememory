@@ -19,7 +19,7 @@ class Firememory < Formula
   on_macos do
     on_arm do
       url "https://github.com/phmotad/firememory/releases/download/v#{version}/firememory_#{version}_darwin_arm64.tar.gz"
-      sha256 "REPLACE_DARWIN_ARM64_SHA256"
+      sha256 "ead0ed7fd325e21bc3761c4992ba64fcb94919983b0133950760d051c82c90db"
     end
   end
 

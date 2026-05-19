@@ -7,7 +7,7 @@
   "architecture": {
     "64bit": {
       "url": "https://github.com/phmotad/firememory/releases/download/v0.1.2/firememory_0.1.2_windows_amd64.zip",
-      "hash": "REPLACE_WINDOWS_AMD64_SHA256"
+      "hash": "e6040da1558445ce8c603a1ad80f18bfd2e123491f7bf78a2aa5f012547d72ca"
     }
   },
   "bin": ["fmem.exe", "fquery.exe"],
