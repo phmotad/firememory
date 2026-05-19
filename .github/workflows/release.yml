@@ -178,14 +178,6 @@ jobs:
           go-version: ${{ env.GO_VERSION }}
           cache: true
 
-      - name: Install MinGW64 via MSYS2
-        uses: msys2/setup-msys2@v2
-        with:
-          msystem: MINGW64
-          install: mingw-w64-x86_64-gcc
-          update: false
-          path-type: inherit
-
       - name: Build libtokenizers (Windows, Rust + MinGW)
         shell: pwsh
         run: |
@@ -194,11 +186,9 @@ jobs:
 
           rustup target add x86_64-pc-windows-gnu
 
-          # Ensure MSYS2 MINGW64 gcc takes precedence over C:\mingw64 (Win32-threads)
-          $env:PATH = "C:\msys64\mingw64\bin;$env:PATH"
-          $gcc = "C:\msys64\mingw64\bin\gcc.exe"
-          Write-Host "gcc: $gcc"
-          $env:CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER = $gcc
+          # Use the pre-installed Win32-threads MinGW (C:\mingw64), reliably present
+          # on windows-latest. POSIX-threads MSYS2 gcc is not reliably available.
+          $env:CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER = "C:\mingw64\bin\gcc.exe"
           Set-Location tokenizers-src
           cargo build --release --target x86_64-pc-windows-gnu -p tokenizers-ffi
           Set-Location ..
@@ -206,7 +196,7 @@ jobs:
           # Locate the static lib (name may vary by crate version)
           $lib = Get-ChildItem -Path tokenizers-src\target -Recurse -Filter "*.a" |
                    Where-Object { $_.FullName -like "*x86_64-pc-windows-gnu*release*" -and
-                                  $_.Name -notlike "*deps*" } |
+                                  $_.FullName -notlike "*\deps\*" } |
                    Select-Object -First 1
           if (-not $lib) {
             Write-Error "No .a file found. Contents of target/x86_64-pc-windows-gnu/release:"
@@ -236,11 +226,11 @@ jobs:
           $env:GOOS = "windows"; $env:GOARCH = "amd64"; $env:CGO_ENABLED = "0"
           go build -ldflags $LDFLAGS -o bin\fmem.exe .\cmd\fmem
 
-          # fquery — CGO via MSYS2 MINGW64 (POSIX-threads, supports -static-libwinpthread)
+          # fquery — CGO via pre-installed Win32-threads MinGW (C:\mingw64)
+          # -static-libwinpthread is omitted: Win32-threads MinGW has no libwinpthread
           $env:CGO_ENABLED = "1"
-          $env:PATH        = "C:\msys64\mingw64\bin;$env:PATH"
-          $env:CC          = "C:\msys64\mingw64\bin\gcc.exe"
-          $env:CGO_LDFLAGS = "-L$Root\tokenizers-lib\windows-amd64 -static-libgcc -static-libstdc++ -static-libwinpthread"
+          $env:CC          = "C:\mingw64\bin\gcc.exe"
+          $env:CGO_LDFLAGS = "-L$Root\tokenizers-lib\windows-amd64 -static-libgcc -static-libstdc++"
           go build -tags onnx -ldflags $LDFLAGS -o bin\fquery.exe .\cmd\fquery
 
       - name: Pack archive
