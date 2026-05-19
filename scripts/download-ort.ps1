@@ -1,6 +1,6 @@
 # Downloads the ONNX Runtime DLL for Windows x64 into .\ort-lib\.
 param([string]$OrtVersion = $env:ORT_VERSION)
-if (-not $OrtVersion) { $OrtVersion = "1.20.0" }
+if (-not $OrtVersion) { $OrtVersion = "1.22.0" }
 
 $Base = "https://github.com/microsoft/onnxruntime/releases/download/v${OrtVersion}"
 $File = "onnxruntime-win-x64-${OrtVersion}.zip"

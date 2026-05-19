@@ -3,7 +3,7 @@
 # Output goes into ort-lib/<os>/ so goreleaser can template ort-lib/{{ .Os }}/*.
 set -euo pipefail
 
-ORT_VERSION="${ORT_VERSION:-1.20.0}"
+ORT_VERSION="${ORT_VERSION:-1.22.0}"
 BASE="https://github.com/microsoft/onnxruntime/releases/download/v${ORT_VERSION}"
 
 OS="$(uname -s)"
