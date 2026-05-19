@@ -1,13 +1,13 @@
 {
   "$schema": "https://raw.githubusercontent.com/ScoopInstaller/Scoop/master/schema.json",
-  "version": "PLACEHOLDER_VERSION",
+  "version": "0.1.1",
   "description": "Local-first semantic memory engine for AI agents",
   "homepage": "https://github.com/phmotad/firememory",
   "license": "Apache-2.0",
   "architecture": {
     "64bit": {
-      "url": "https://github.com/phmotad/firememory/releases/download/vPLACEHOLDER_VERSION/firememory_PLACEHOLDER_VERSION_windows_amd64.zip",
-      "hash": "PLACEHOLDER_SHA256_WINDOWS_AMD64"
+      "url": "https://github.com/phmotad/firememory/releases/download/v0.1.1/firememory_0.1.1_windows_amd64.zip",
+      "hash": "82c58b74980d5dc45ec72b4caafef945c7e347169c5adef1ae9b70884589e1b0"
     }
   },
   "bin": ["fmem.exe", "fquery.exe"],

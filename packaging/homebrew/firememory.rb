@@ -13,28 +13,28 @@
 class Firememory < Formula
   desc "Local-first semantic memory engine for AI agents"
   homepage "https://github.com/phmotad/firememory"
-  version "PLACEHOLDER_VERSION"
+  version "0.1.1"
   license "Apache-2.0"
 
   on_macos do
     on_arm do
       url "https://github.com/phmotad/firememory/releases/download/v#{version}/firememory_#{version}_darwin_arm64.tar.gz"
-      sha256 "PLACEHOLDER_SHA256_DARWIN_ARM64"
+      sha256 "5b531622b798dedc490b95341769ff7f480d1278e54f6b4720ea43883ee43e9c"
     end
     on_intel do
       url "https://github.com/phmotad/firememory/releases/download/v#{version}/firememory_#{version}_darwin_amd64.tar.gz"
-      sha256 "PLACEHOLDER_SHA256_DARWIN_AMD64"
+      sha256 "4065d4fa95e92f87cd2042c6bd375d8e7b45aab95438cdd57ad664c7356ef9fb"
     end
   end
 
   on_linux do
     on_arm do
       url "https://github.com/phmotad/firememory/releases/download/v#{version}/firememory_#{version}_linux_arm64.tar.gz"
-      sha256 "PLACEHOLDER_SHA256_LINUX_ARM64"
+      sha256 "87a9b3d28830dd93dce9033980fe46fd8b43ee60c70351552544ccd138513d57"
     end
     on_intel do
       url "https://github.com/phmotad/firememory/releases/download/v#{version}/firememory_#{version}_linux_amd64.tar.gz"
-      sha256 "PLACEHOLDER_SHA256_LINUX_AMD64"
+      sha256 "85191759a6629c1af19ad3a61a9fe17a6bc8539755785868178ab80dbc4ba439"
     end
   end
 
