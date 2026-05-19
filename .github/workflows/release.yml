@@ -193,13 +193,20 @@ jobs:
 
           $env:CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER = "C:\msys64\mingw64\bin\gcc.exe"
           Set-Location tokenizers-src
-          cargo build --release --target x86_64-pc-windows-gnu -p tokenizers
+          cargo build --release --target x86_64-pc-windows-gnu
           Set-Location ..
 
+          # Locate the produced static lib regardless of exact workspace path
+          $lib = Get-ChildItem -Path tokenizers-src\target -Recurse -Filter "libtokenizers.a" |
+                   Where-Object { $_.FullName -like "*x86_64-pc-windows-gnu*release*" } |
+                   Select-Object -First 1
+          if (-not $lib) {
+            Write-Error "libtokenizers.a not found. Files in target:"
+            Get-ChildItem -Path tokenizers-src\target -Recurse -Filter "*.a" | ForEach-Object { $_.FullName }
+            exit 1
+          }
           New-Item -ItemType Directory -Force -Path tokenizers-lib\windows-amd64 | Out-Null
-          Copy-Item `
-            tokenizers-src\target\x86_64-pc-windows-gnu\release\libtokenizers.a `
-            tokenizers-lib\windows-amd64\libtokenizers.a
+          Copy-Item $lib.FullName tokenizers-lib\windows-amd64\libtokenizers.a
 
       - name: Download ORT (Windows)
         shell: pwsh
